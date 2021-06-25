@@ -20,6 +20,9 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired
     private UtConsumerRepository utConsumerRepository;
 
+    @Autowired
+    private ConsumerService consumerService;
+
     @Override
     @DataSource(name = DataSourcesType.MASTER)
     public UtConsumer listMster() {
