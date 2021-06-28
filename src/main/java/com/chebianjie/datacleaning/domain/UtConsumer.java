@@ -1,6 +1,8 @@
 package com.chebianjie.datacleaning.domain;
 
 import lombok.Data;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,6 +16,7 @@ import java.math.BigDecimal;
 @Data
 @Entity
 @Table(name = "ut_consumer")
+@Proxy(lazy = false)
 public class UtConsumer implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -24,4 +24,10 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     public Page<UtConsumer> pageUtConsumer(Pageable pageable) {
         return utConsumerRepository.findAll(pageable);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public UtConsumer getUtConsumerById(Long id) {
+        return utConsumerRepository.getById(id);
+    }
 }

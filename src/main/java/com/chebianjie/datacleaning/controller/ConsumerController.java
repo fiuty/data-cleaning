@@ -1,5 +1,6 @@
 package com.chebianjie.datacleaning.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -60,7 +62,7 @@ public class ConsumerController {
                 UtConsumer chjUtConsumer = null;
                 if(StrUtil.isNotBlank(curCbjUtConsumer.getUnionid())){
                     //检查是否搬迁过
-                    if(consumerLogService.getOneByUnionId(curCbjUtConsumer.getUnionid()) != null){
+                    if(consumerLogService.getOneByUnionId(curCbjUtConsumer.getUnionid(), 1) != null){
                         continue;
                     }
                     //存在脏数据同一unionid有两个账号
@@ -73,11 +75,12 @@ public class ConsumerController {
                         consumerLogService.saveOne(temp);
 
                         continue;
+                    }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
+                        chjUtConsumer = chjUtConsumerList.get(0);
                     }
-                    chjUtConsumer = chjUtConsumerList.get(0);
                 }else if(StrUtil.isNotBlank(curCbjUtConsumer.getAccount())){
                     //检查是否搬迁过
-                    if(consumerLogService.getOneByCbjAccount(curCbjUtConsumer.getAccount()) != null){
+                    if(consumerLogService.getOneByCbjAccount(curCbjUtConsumer.getAccount(), 1) != null){
                         continue;
                     }
                     //存在脏数据同一unionid有两个账号
@@ -90,8 +93,9 @@ public class ConsumerController {
                         consumerLogService.saveOne(temp);
 
                         continue;
+                    }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
+                        chjUtConsumer = chjUtConsumerList.get(0);
                     }
-                    chjUtConsumer = chjUtConsumerList.get(0);
                 }
                 //3.处理数据
                 //es.submit(new ConsumerTask(curCbjUtConsumer, chjUtConsumer));
@@ -104,4 +108,55 @@ public class ConsumerController {
         return "finish";
     }
 
+    @GetMapping("/test")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Object testSynch(@RequestParam("id") long id){
+        //1.获取车便捷用户
+        UtConsumer curCbjUtConsumer = cbjUtConsumerService.getUtConsumerById(id);
+        //2.与车惠捷用户对比  ---- 先用unionid合并,若unionid为空则用account
+        UtConsumer chjUtConsumer = null;
+        if (StrUtil.isNotBlank(curCbjUtConsumer.getUnionid())) {
+            //检查是否搬迁过
+            if (consumerLogService.getOneByUnionId(curCbjUtConsumer.getUnionid(), 1) != null) {
+                return "exist unionid";
+            }
+            //存在脏数据同一unionid有两个账号
+            List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByUnionid(curCbjUtConsumer.getUnionid());
+            if (chjUtConsumerList.size() > 1) {
+                //非unique返回记录不处理
+                ConsumerLog temp = new ConsumerLog();
+                temp.setUnionid(curCbjUtConsumer.getUnionid());
+                temp.setCbjId(curCbjUtConsumer.getId());
+                temp.setStatus(2);
+                consumerLogService.saveOne(temp);
+
+                return "not unique unionid";
+            }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
+                chjUtConsumer = chjUtConsumerList.get(0);
+            }
+        } else if (StrUtil.isNotBlank(curCbjUtConsumer.getAccount())) {
+            //检查是否搬迁过
+            if (consumerLogService.getOneByCbjAccount(curCbjUtConsumer.getAccount(), 1) != null) {
+                return "exist account";
+            }
+            //存在脏数据同一unionid有两个账号
+            List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(curCbjUtConsumer.getAccount());
+            if (chjUtConsumerList.size() > 1) {
+                //非unique返回记录不处理
+                ConsumerLog temp = new ConsumerLog();
+                temp.setCbjAccount(curCbjUtConsumer.getAccount());
+                temp.setCbjId(curCbjUtConsumer.getId());
+                temp.setStatus(2);
+                consumerLogService.saveOne(temp);
+
+                return "not unique account";
+            }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
+                chjUtConsumer = chjUtConsumerList.get(0);
+            }
+        }
+        //3.处理数据
+        consumerService.mergeConsumer(curCbjUtConsumer, chjUtConsumer);
+
+        return "test finish";
+    }
 }

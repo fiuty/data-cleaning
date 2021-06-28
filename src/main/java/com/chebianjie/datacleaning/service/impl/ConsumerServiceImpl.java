@@ -62,7 +62,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
         try {
-            Consumer consumer = new Consumer();
+            Consumer consumer;
             if (chjUtConsumer == null) {
                 //1. 车惠捷数据null 以车便捷数据入库
                 consumer = transConsumer(cbjUtConsumer, 1);
@@ -76,22 +76,29 @@ public class ConsumerServiceImpl implements ConsumerService {
             }
             consumerRepository.save(consumer);
             //3.迁移成功记录日志
-            ConsumerLog temp = new ConsumerLog();
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                temp.setUnionid(cbjUtConsumer.getUnionid());
+            //判断是否有失败记录, 有则更新 无则插入
+            ConsumerLog curConsumerLog = consumerLogRepository.findOneByCbjIdAndStatus(cbjUtConsumer.getId(), 0);
+            if(curConsumerLog != null) {
+                curConsumerLog.setStatus(1);
+                consumerLogRepository.save(curConsumerLog);
+            }else{
+                ConsumerLog temp = new ConsumerLog();
+                if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
+                    temp.setUnionid(cbjUtConsumer.getUnionid());
+                }
+                temp.setCbjId(cbjUtConsumer.getId());
+                if (chjUtConsumer != null) {
+                    temp.setChjId(chjUtConsumer.getId());
+                }
+                if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
+                    temp.setCbjAccount(cbjUtConsumer.getAccount());
+                }
+                if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
+                    temp.setChjAccount(chjUtConsumer.getAccount());
+                }
+                temp.setStatus(1);
+                consumerLogRepository.save(temp);
             }
-            temp.setCbjId(cbjUtConsumer.getId());
-            if(chjUtConsumer != null){
-                temp.setChjId(chjUtConsumer.getId());
-            }
-            if(StrUtil.isNotBlank(cbjUtConsumer.getAccount())){
-                temp.setCbjAccount(cbjUtConsumer.getAccount());
-            }
-            if(chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())){
-                temp.setChjAccount(chjUtConsumer.getAccount());
-            }
-            temp.setStatus(1);
-            consumerLogRepository.save(temp);
         }catch (Exception e){
             log.error(e.getMessage());
             //4. 有任何报错记录log 失败
@@ -117,6 +124,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     /**
      * 转旧consumer为新consumer
      * @param utConsumer
+     * @param platform 1:车便捷 2:车惠捷
      * @return
      */
     private Consumer transConsumer(UtConsumer utConsumer, int platform){
@@ -142,13 +150,40 @@ public class ConsumerServiceImpl implements ConsumerService {
         rst.setBirthday(utConsumer.getBirthday());
         rst.setBindSiteId(utConsumer.getStairSiteId());
         rst.setBindSiteName(utConsumer.getStairSiteId() != null ? utConsumer.getStairSiteName() : null);
-        rst.setBindSitePlatform(utConsumer.getStairSiteId() != null ? Platform.CHEBIANJIE : null);
-        rst.setBindSiteTime(utConsumer.getStairSiteId() != null ? LocalDateTime.ofEpochSecond(utConsumer.getStairSiteBindingTime()/1000, 0, ZoneOffset.ofHours(8)) : null);
+        rst.setBindSitePlatform(fixBindSitePlatform(utConsumer, platform));
+        rst.setBindSiteTime(fixBindSiteTime(utConsumer));
         rst.setConsumptionNum(utConsumer.getOrderNum() != null ? utConsumer.getOrderNum().intValue() : null);
         rst.setConsumptionPrice(utConsumer.getConsumptionAmount());
         rst.setLastLoginTime(utConsumer.getLastlogintime() != null ? LocalDateTime.ofEpochSecond(utConsumer.getLastlogintime()/1000, 0, ZoneOffset.ofHours(8)) : null);
         //TODO 没有积分
 
         return rst;
+    }
+
+    /**
+     * 处理 bindSitePlatform
+     * @param utConsumer
+     * @param platform
+     * @return
+     */
+    private Platform fixBindSitePlatform(UtConsumer utConsumer, int platform){
+        if(utConsumer.getStairSiteId() == null){
+            return null;
+        }else{
+            return platform == 1 ? Platform.CHEBIANJIE : Platform.CHEHUIJIE;
+        }
+    }
+
+    /**
+     * 处理 bindSiteTime
+     * @param utConsumer
+     * @return
+     */
+    private LocalDateTime fixBindSiteTime(UtConsumer utConsumer){
+        if(utConsumer.getStairSiteId() != null && utConsumer.getStairSiteBindingTime() != null){
+            return LocalDateTime.ofEpochSecond(utConsumer.getStairSiteBindingTime()/1000, 0, ZoneOffset.ofHours(8));
+        }else{
+            return null;
+        }
     }
 }

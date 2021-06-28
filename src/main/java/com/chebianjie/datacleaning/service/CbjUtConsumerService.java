@@ -7,4 +7,6 @@ import org.springframework.data.domain.Pageable;
 public interface CbjUtConsumerService {
 
     Page<UtConsumer> pageUtConsumer(Pageable pageable);
+
+    UtConsumer getUtConsumerById(Long id);
 }
