@@ -11,4 +11,6 @@ public interface ConsumerService {
     UtConsumer listMster();
 
     UtConsumer listSlave();
+
+    void mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer);
 }

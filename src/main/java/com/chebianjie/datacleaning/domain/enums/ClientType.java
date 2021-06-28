@@ -23,5 +23,26 @@ public enum ClientType {
     /**
      * 网页版
      */
-    H5
+    H5;
+
+    /**
+     *  根据dataFrom返回枚举
+     * @param dataFrom
+     * @return
+     */
+    public static ClientType fixClientType(int dataFrom){
+        ClientType clientType = null;
+        switch (dataFrom){
+            case 1:
+                clientType = ClientType.WECHAT_MP;
+                break;
+            case 2:
+                clientType = ClientType.APP;
+                break;
+            case 3:
+                clientType = ClientType.WECHAT_MINI_APP;
+                break;
+        }
+        return clientType;
+    }
 }

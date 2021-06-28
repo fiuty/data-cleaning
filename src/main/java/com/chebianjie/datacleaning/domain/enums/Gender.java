@@ -15,7 +15,27 @@ public enum Gender {
      */
     WOMAN,
     /**
-     * 位置
+     * 未知
      */
-    UNKNOWN
+    UNKNOWN;
+
+    /**
+     * 根据sex返回枚举
+     * @param sex
+     * @return
+     */
+    public static Gender fixGender(int sex){
+        Gender gender = null;
+        switch (sex){
+            case 1:
+                gender = Gender.MAN;
+                break;
+            case 2:
+                gender = Gender.WOMAN;
+                break;
+            default:
+                gender = Gender.UNKNOWN;
+        }
+        return gender;
+    }
 }

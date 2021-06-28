@@ -17,6 +17,6 @@ public enum DataSourcesType {
     /**
      * 用户合并
      */
-    USERPLATFORM
+    USERPLATFORM;
 
 }

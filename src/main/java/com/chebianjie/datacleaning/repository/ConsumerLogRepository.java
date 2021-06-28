@@ -7,4 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>, JpaSpecificationExecutor<ConsumerLog> {
+
+    ConsumerLog findOneByUnionid(String unionid);
+
+    ConsumerLog findOneByCbjAccount(String cbjAccount);
 }

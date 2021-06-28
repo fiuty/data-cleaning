@@ -1,4 +1,4 @@
-CREATE TABLE `cusumer_log`  (
+CREATE TABLE `consumer_log`  (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
   `unionid` varchar(255) NULL,
   `cbj_id` bigint NOT NULL COMMENT '车便捷consumer_id',

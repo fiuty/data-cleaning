@@ -56,6 +56,12 @@ spring:
         wall:
           config:
             multi-statement-allow: true
+  jpa:
+    show-sql: true
 
 server:
   port: 8081
+
+logging:
+  level:
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
