@@ -63,10 +63,12 @@ public class ConsumerServiceImpl implements ConsumerService {
     public void mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
         try {
             Consumer consumer;
-            if (chjUtConsumer == null) {
+            if (chjUtConsumer == null && cbjUtConsumer != null) {
                 //1. 车惠捷数据null 以车便捷数据入库
                 consumer = transConsumer(cbjUtConsumer, 1);
-            } else {
+            }else if(chjUtConsumer != null && cbjUtConsumer == null){
+                consumer = transConsumer(chjUtConsumer, 2);
+            }else {
                 //2. 两者不为空, 对比注册时间, 以较早注册的为主
                 if (cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()){
                     consumer = transConsumer(cbjUtConsumer, 1);

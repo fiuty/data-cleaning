@@ -17,7 +17,8 @@ public class ConsumerTask implements Runnable {
 
     private UtConsumer chjUtConsumer;
 
-    public ConsumerTask(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+    public ConsumerTask(ConsumerService consumerService, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        this.consumerService = consumerService;
         this.cbjUtConsumer = cbjUtConsumer;
         this.chjUtConsumer = chjUtConsumer;
     }
