@@ -210,13 +210,13 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         }
     }
 
-    private ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer preChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
+    private ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
         ConsumerBillChangeDetail detail = new ConsumerBillChangeDetail();
         detail.setBillIdentify(billIdentify);
-        detail.setPreChangeValue(preChangeValue);
+        detail.setPreChangeValue(NumberUtil.addIfNull(afterChangeValue, changeValue));
         detail.setChangeValue(changeValue);
         detail.setBalanceType(balanceType);
-        detail.setAfterChangeValue(NumberUtil.addIfNull(preChangeValue, changeValue));
+        detail.setAfterChangeValue(afterChangeValue);
         detail.setPlatform(platform);
         return detail;
     }
