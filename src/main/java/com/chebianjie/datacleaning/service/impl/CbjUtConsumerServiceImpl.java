@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
@@ -29,5 +31,11 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     @DataSource(name = DataSourcesType.MASTER)
     public UtConsumer getUtConsumerById(Long id) {
         return utConsumerRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public List<UtConsumer> listByUnionid(String unionid) {
+        return utConsumerRepository.findListByUnionid(unionid);
     }
 }

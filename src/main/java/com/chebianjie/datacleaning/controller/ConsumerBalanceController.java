@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,19 +31,7 @@ import java.util.concurrent.Executors;
 @RestController
 @RequestMapping("/consumer-balance")
 @Slf4j
-public class ConsumerBalanceController {
-
-    @Autowired
-    private CbjUtConsumerService cbjUtConsumerService;
-
-    @Autowired
-    private ChjUtConsumerService chjUtConsumerService;
-
-    @Autowired
-    private ConsumerLogService consumerLogService;
-
-    @Autowired
-    private ConsumerBalanceService consumerBalanceService;
+public class ConsumerBalanceController extends AbstractBaseController {
 
     @GetMapping("/synch")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -63,8 +52,10 @@ public class ConsumerBalanceController {
             totalPages = utConsumerPage.getTotalPages();
             List<UtConsumer> utConsumerList = utConsumerPage.getContent();
             for(int i = 1; i <= utConsumerList.size(); i++){
-                //2.与车惠捷用户对比  ---- 先用unionid合并,若unionid为空则用account
                 UtConsumer curCbjUtConsumer = utConsumerList.get(i-1);
+                //2.存在同一unionid多条数据需提前合并
+                curCbjUtConsumer = fixCbjUtConsumer(curCbjUtConsumer);
+                //3.与车惠捷用户对比  ---- 先用unionid合并,若unionid为空则用account
                 UtConsumer chjUtConsumer = null;
                 if(StrUtil.isNotBlank(curCbjUtConsumer.getUnionid())){
                     //检查是否搬迁过
@@ -105,7 +96,7 @@ public class ConsumerBalanceController {
                         chjUtConsumer = chjUtConsumerList.get(0);
                     }
                 }
-                //3.处理数据
+                //4.处理数据
                 es.submit(new ConsumerBalanceTask(consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
             }
             page = page +1;

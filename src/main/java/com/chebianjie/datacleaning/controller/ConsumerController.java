@@ -4,13 +4,8 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
-import com.chebianjie.datacleaning.service.CbjUtConsumerService;
-import com.chebianjie.datacleaning.service.ChjUtConsumerService;
-import com.chebianjie.datacleaning.service.ConsumerLogService;
-import com.chebianjie.datacleaning.service.ConsumerService;
 import com.chebianjie.datacleaning.threads.ConsumerTask;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -21,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,19 +23,7 @@ import java.util.concurrent.Executors;
 @RestController
 @RequestMapping("/consumer")
 @Slf4j
-public class ConsumerController {
-
-    @Autowired
-    private CbjUtConsumerService cbjUtConsumerService;
-
-    @Autowired
-    private ChjUtConsumerService chjUtConsumerService;
-
-    @Autowired
-    private ConsumerService consumerService;
-
-    @Autowired
-    private ConsumerLogService consumerLogService;
+public class ConsumerController extends AbstractBaseController{
 
     /**
      * 同步迁移用户数据 - 以车便捷为主
@@ -52,7 +34,7 @@ public class ConsumerController {
     public Object synchConsumer(){
         long start = System.currentTimeMillis();
         //创建线程
-        final ExecutorService es = Executors.newFixedThreadPool(30);
+        final ExecutorService es = Executors.newFixedThreadPool(50);
         //同步开始
         int totalPages;
         int page = 0;
@@ -65,52 +47,17 @@ public class ConsumerController {
             utConsumerPage = cbjUtConsumerService.pageUtConsumer(pageRequest);
             totalPages = utConsumerPage.getTotalPages();
             List<UtConsumer> utConsumerList = utConsumerPage.getContent();
+            //2.处理数据
             for(int i = 1; i <= utConsumerList.size(); i++){
-                //2.与车惠捷用户对比  ---- 先用unionid合并,若unionid为空则用account
                 UtConsumer curCbjUtConsumer = utConsumerList.get(i-1);
-                UtConsumer chjUtConsumer = null;
-                if(StrUtil.isNotBlank(curCbjUtConsumer.getUnionid())){
-                    //检查是否搬迁过
-                    if(consumerLogService.getOneByUnionId(curCbjUtConsumer.getUnionid(), 1, 1) != null){
-                        continue;
-                    }
-                    //存在脏数据同一unionid有两个账号
-                    List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByUnionid(curCbjUtConsumer.getUnionid());
-                    if(chjUtConsumerList.size() > 1){
-                        ConsumerLog temp = new ConsumerLog();
-                        temp.setUnionid(curCbjUtConsumer.getUnionid());
-                        temp.setCbjId(curCbjUtConsumer.getId());
-                        temp.setType(1);
-                        temp.setStatus(0);
-                        consumerLogService.saveOne(temp);
-
-                        continue;
-                    }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
-                        chjUtConsumer = chjUtConsumerList.get(0);
-                    }
-                }else if(StrUtil.isNotBlank(curCbjUtConsumer.getAccount())){
-                    //检查是否搬迁过
-                    if(consumerLogService.getOneByCbjAccount(curCbjUtConsumer.getAccount(), 1, 1) != null){
-                        continue;
-                    }
-                    //存在脏数据同一unionid有两个账号
-                    List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(curCbjUtConsumer.getAccount());
-                    if(chjUtConsumerList.size() > 1){
-                        ConsumerLog temp = new ConsumerLog();
-                        temp.setCbjAccount(curCbjUtConsumer.getAccount());
-                        temp.setCbjId(curCbjUtConsumer.getId());
-                        temp.setType(1);
-                        temp.setStatus(0);
-                        consumerLogService.saveOne(temp);
-
-                        continue;
-                    }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
-                        chjUtConsumer = chjUtConsumerList.get(0);
-                    }
+                //3.存在同一unionid多条数据需提前合并
+                curCbjUtConsumer = fixCbjUtConsumer(curCbjUtConsumer);
+                //4.获取与当前车便捷用户对应的车惠捷用户
+                if(!checkClean(curCbjUtConsumer)){
+                    UtConsumer chjUtConsumer = fixChjUtConsumer(curCbjUtConsumer);
+                    //5.处理数据
+                    es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
                 }
-                //3.处理数据
-                es.submit(new ConsumerTask(consumerService, curCbjUtConsumer, chjUtConsumer));
-                //consumerService.mergeConsumer(curCbjUtConsumer, chjUtConsumer);
             }
             page = page +1;
         }while(page != totalPages);

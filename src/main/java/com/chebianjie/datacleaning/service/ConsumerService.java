@@ -16,7 +16,7 @@ public interface ConsumerService {
 
     UtConsumer listSlave();
 
-    void mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer);
+    Consumer mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer);
 
     int countByRegistryTimeLessThanEqual(LocalDateTime flowConsumerTime);
 

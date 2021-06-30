@@ -61,9 +61,9 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public void mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
+    public Consumer mergeConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
+        Consumer consumer = null;
         try {
-            Consumer consumer;
             if (chjUtConsumer == null && cbjUtConsumer != null) {
                 //1. 车惠捷数据null 以车便捷数据入库
                 consumer = transConsumer(cbjUtConsumer, 1);
@@ -124,6 +124,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             temp.setStatus(0);
             consumerLogRepository.save(temp);
         }
+        return consumer;
     }
 
     /**

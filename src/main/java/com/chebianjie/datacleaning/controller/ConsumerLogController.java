@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/log")
-public class ConsumerLogController {
-
-    @Autowired
-    private ConsumerLogService consumerLogService;
+public class ConsumerLogController extends AbstractBaseController{
 
     @GetMapping
     public Object test(){
