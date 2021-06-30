@@ -1,0 +1,11 @@
+# 开发环境配置
+spring:
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.0.88:8848
+        file-extension: yaml
+        namespace: 5b878758-e4d4-4ba8-aad5-d98cf0ad36e7
+#        namespace: b7fedfd3-e347-4e96-ab7a-502c68c5987c

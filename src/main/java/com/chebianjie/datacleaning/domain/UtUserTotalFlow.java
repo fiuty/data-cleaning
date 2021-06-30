@@ -1,5 +1,6 @@
 package com.chebianjie.datacleaning.domain;
 
+import com.chebianjie.datacleaning.domain.enums.Platform;
 import com.chebianjie.datacleaning.domain.enums.WashMachineClassModel;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
@@ -62,13 +63,13 @@ public class UtUserTotalFlow implements Serializable {
     private Integer fundDirection;
 
     /**
-     * 业务类型(1.充值  2洗车  3商城消费  4.退款  5门店消费  6余额清零)
+     * 业务类型(1.充值  2洗车  3商城消费  4.退款  5门店消费  6余额清零 8撤销退款 9购买年卡 10增值服务)
      */
     @Column(name = "trx_type")
     private Integer trxType;
 
     /**
-     * 业务拓展类型(11.支付宝支付  12.微信支付 13管理员充值    21 洗车消费  22 车主服务消费   31 车品商城消费 51门店消费  61余额清零 71余额转移)
+     * 业务拓展类型(11.支付宝支付  12.微信支付 13管理员充值 21 洗车消费  22 车主服务消费  23未启动机器 31 车品商城消费 51门店消费  61余额清零 71余额转移 14评论奖励)
      */
     @Column(name = "trx_expand_type")
     private Integer trxExpandType;
@@ -271,5 +272,11 @@ public class UtUserTotalFlow implements Serializable {
      * 用户余额变动操作人
      */
     private String operationName;
+
+    /**
+     * 平台,清洗数据用
+     */
+    @Transient
+    private Platform platform;
 
 }

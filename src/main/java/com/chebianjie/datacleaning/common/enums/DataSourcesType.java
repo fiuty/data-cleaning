@@ -17,6 +17,15 @@ public enum DataSourcesType {
     /**
      * 用户合并
      */
-    USERPLATFORM;
+    USERPLATFORM,
 
+    /**
+     * 车便捷order
+     */
+    CBJ_ORDER,
+
+    /**
+     * 车惠捷order
+     */
+    CHJ_ORDER;
 }

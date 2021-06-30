@@ -13,4 +13,11 @@ public interface ConsumerLogService {
     int countByUnionId(String unionid, int type, int status);
 
     int countByCbjAccount(String cbjAccount, int type, int status);
+    int countByAccount(String cbjAccount, int type, int status);
+
+    ConsumerLog findOneByUnionidAndStatusAndType(String unionid, int status, int type);
+
+    ConsumerLog findOneByCbjAccountAndStatusAndType(String phone, int status, int type);
+
+    ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type);
 }

@@ -4,6 +4,11 @@ package com.chebianjie.datacleaning.repository;
 import com.chebianjie.datacleaning.domain.Consumer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 
 /**
@@ -17,4 +22,8 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
     Consumer findByWechatUnionId(String unionid);
 
     Consumer findByPhone(String phone);
+    int countByRegistryTimeLessThanEqual(LocalDateTime flowConsumerTime);
+
+    @Query(nativeQuery = true,value = "select * from consumer limit :pageNumber, :pageSize")
+    List<Consumer> findAllByPage(@Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
 }

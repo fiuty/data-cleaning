@@ -1,5 +1,6 @@
 package com.chebianjie.datacleaning.repository;
 
+
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -21,4 +22,7 @@ public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>,
     int countByUnionidAndTypeAndStatus(String unionid, int type , int status);
 
     int countByCbjAccountAndTypeAndStatus(String cbjAccount, int type, int status);
+
+    ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type);
+
 }

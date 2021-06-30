@@ -15,16 +15,12 @@ public enum BillType {
     WASH,
     //商城消费
     MALL,
+    //退款
+    REFUND,
     //门店消费
     STORE,
-    //余额清零
-    RESET,
-    //余额转移
-    TRANSFER,
     //购买消费卡
     CONSUMER_CARD,
-    //撤销退款
-    CANCEL_REFUND,
     //增值服务
     SERVER
 }

@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -208,5 +210,11 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
                 break;
         }
         return rst;
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<ConsumerBalance> findByUnionAccount(String unionAccount) {
+        return consumerBalanceRepository.findByUnionAccount(unionAccount);
     }
 }

@@ -50,16 +50,39 @@ public class DataSourceConfiguration {
     }
 
     /**
+     * 车便捷订单
+     */
+    @Bean
+    @ConditionalOnProperty( prefix = "spring.datasource.druid.cbjorder", name = "enable", havingValue = "true")//是否开启数据源开关---若不开启 默认适用默认数据源
+    @ConfigurationProperties("spring.datasource.druid.cbjorder")
+    public DataSource cbjOrderDataSource(DataSourceProperties dataSourceProperties) {
+        return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
+    }
+
+    /**
+     * 车惠捷订单
+     */
+    @Bean
+    @ConditionalOnProperty( prefix = "spring.datasource.druid.chjorder", name = "enable", havingValue = "true")//是否开启数据源开关---若不开启 默认适用默认数据源
+    @ConfigurationProperties("spring.datasource.druid.chjorder")
+    public DataSource chjOrderDataSource(DataSourceProperties dataSourceProperties) {
+        return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
+    }
+
+    /**
      * 设置数据源
      */
     @Bean(name = "dynamicDataSource")
     @Primary
-    public DynamicDataSource dynamicDataSource(DataSource masterDataSource, DataSource slaveDataSource, DataSource userPlatformDataSource) {
+    public DynamicDataSource dynamicDataSource(DataSource masterDataSource, DataSource slaveDataSource, DataSource userPlatformDataSource,
+                                               DataSource cbjOrderDataSource, DataSource chjOrderDataSource) {
         Map<Object, Object> targetDataSources = new HashMap<>();
         DynamicDataSource dynamicDataSource = DynamicDataSource.build();
         targetDataSources.put(DataSourcesType.MASTER.name(), masterDataSource);
         targetDataSources.put(DataSourcesType.SLAVE.name(), slaveDataSource);
         targetDataSources.put(DataSourcesType.USERPLATFORM.name(), userPlatformDataSource);
+        targetDataSources.put(DataSourcesType.CBJ_ORDER.name(), cbjOrderDataSource);
+        targetDataSources.put(DataSourcesType.CHJ_ORDER.name(), chjOrderDataSource);
         //默认数据源配置 DefaultTargetDataSource
         dynamicDataSource.setDefaultTargetDataSource(masterDataSource);
         //额外数据源配置 TargetDataSources

@@ -28,6 +28,6 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     @Override
     @DataSource(name = DataSourcesType.MASTER)
     public UtConsumer getUtConsumerById(Long id) {
-        return utConsumerRepository.getById(id);
+        return utConsumerRepository.findById(id).orElse(null);
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -223,5 +224,23 @@ public class ConsumerServiceImpl implements ConsumerService {
         }else{
             return null;
         }
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public int countByRegistryTimeLessThanEqual(LocalDateTime flowConsumerTime) {
+        return consumerRepository.countByRegistryTimeLessThanEqual(flowConsumerTime);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<Consumer> findAllByPage(int pageNumber, int pageSize) {
+        return consumerRepository.findAllByPage(pageNumber, pageSize);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer findById(Long id) {
+        return consumerRepository.findById(id).orElse(null);
     }
 }

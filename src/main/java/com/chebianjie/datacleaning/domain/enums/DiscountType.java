@@ -15,5 +15,7 @@ public enum DiscountType {
     // 折扣券
     DISCOUNT,
     //洗车券金额
-    CAR
+    CAR,
+    //中石化优惠券
+    SINOPEC
 }

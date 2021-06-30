@@ -46,4 +46,22 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
     public int countByCbjAccount(String cbjAccount, int type, int status) {
         return consumerLogRepository.countByCbjAccountAndTypeAndStatus(cbjAccount, type, status);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog findOneByUnionidAndStatusAndType(String unionid, int status, int type) {
+        return consumerLogRepository.findOneByUnionidAndStatusAndType(unionid, status, type);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog findOneByCbjAccountAndStatusAndType(String phone, int status, int type) {
+        return consumerLogRepository.findOneByCbjAccountAndStatusAndType(phone, status, type);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type) {
+        return consumerLogRepository.findOneByChjAccountAndStatusAndType(phone, status, type);
+    }
 }

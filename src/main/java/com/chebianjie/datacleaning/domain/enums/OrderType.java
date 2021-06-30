@@ -39,21 +39,21 @@ public enum OrderType {
     CHARGE_IC_CARD,
 
     /**
-     * 商城业务
-     */
-    MALL,
-
-    /**
      * 退款业务
      */
-    REFUND,
-
-    /**
-     * 余额转移
-     */
+    //余额清零
+    RESET,
+    //撤销退款
+    CANCEL_REFUND,
     //余额已转移
     BALANCE_TRANSFER,
     //余额已转入
-    BALANCE_COME
+    BALANCE_COME,
+    //全自动退款
+    AUTO_REFUND,
+    //商城退款,
+    MALL_REFUND,
+    //门店消费退款
+    STORE_REFUND
 
 }
