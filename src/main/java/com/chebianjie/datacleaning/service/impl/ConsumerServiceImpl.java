@@ -79,7 +79,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             consumerRepository.save(consumer);
             //3.迁移成功记录日志
             //判断是否有失败记录, 有则更新 无则插入
-            ConsumerLog curConsumerLog = consumerLogRepository.findOneByCbjIdAndStatus(cbjUtConsumer.getId(), 0);
+            ConsumerLog curConsumerLog = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 1, 0);
             if(curConsumerLog != null) {
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
@@ -98,6 +98,7 @@ public class ConsumerServiceImpl implements ConsumerService {
                 if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
                     temp.setChjAccount(chjUtConsumer.getAccount());
                 }
+                temp.setType(1);
                 temp.setStatus(1);
                 consumerLogRepository.save(temp);
             }
@@ -118,6 +119,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             if(chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())){
                 temp.setChjAccount(chjUtConsumer.getAccount());
             }
+            temp.setType(1);
             temp.setStatus(0);
             consumerLogRepository.save(temp);
         }

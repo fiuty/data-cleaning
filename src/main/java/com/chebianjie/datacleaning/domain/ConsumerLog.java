@@ -15,14 +15,34 @@ public class ConsumerLog implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * utconsumer_unionid
+     */
     private String unionid;
 
+    /**
+     * 类型: 1.用户迁移 2.用户余额迁移
+     */
+    private int type;
+
+    /**
+     * 车便捷consumer_id
+     */
     private Long cbjId;
 
+    /**
+     * 车惠捷consumer_id
+     */
     private Long chjId;
 
+    /**
+     * 车便捷jhi_account
+     */
     private String cbjAccount;
 
+    /**
+     * 车惠捷jhi_account
+     */
     private String chjAccount;
 
     /**

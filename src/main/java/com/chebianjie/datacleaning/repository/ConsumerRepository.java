@@ -14,4 +14,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSpecificationExecutor<Consumer> {
 
+    Consumer findByWechatUnionId(String unionid);
+
 }

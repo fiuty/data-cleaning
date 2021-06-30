@@ -3,12 +3,10 @@ package com.chebianjie.datacleaning.threads;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.service.ConsumerService;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Data
 public class ConsumerTask implements Runnable {
 
-    @Autowired
     private ConsumerService consumerService;
 
     //private String name;
