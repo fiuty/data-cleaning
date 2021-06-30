@@ -43,7 +43,7 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public int countByAccount(String cbjAccount, int type, int status) {
+    public int countByCbjAccount(String cbjAccount, int type, int status) {
         return consumerLogRepository.countByCbjAccountAndTypeAndStatus(cbjAccount, type, status);
     }
 }

@@ -16,4 +16,5 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
 
     Consumer findByWechatUnionId(String unionid);
 
+    Consumer findByPhone(String phone);
 }

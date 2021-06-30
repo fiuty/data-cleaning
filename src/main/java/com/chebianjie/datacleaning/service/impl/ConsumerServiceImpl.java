@@ -79,7 +79,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             consumerRepository.save(consumer);
             //3.迁移成功记录日志
             //判断是否有失败记录, 有则更新 无则插入
-            ConsumerLog curConsumerLog = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 1, 0);
+            ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer , chjUtConsumer);
             if(curConsumerLog != null) {
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
@@ -123,6 +123,40 @@ public class ConsumerServiceImpl implements ConsumerService {
             temp.setStatus(0);
             consumerLogRepository.save(temp);
         }
+    }
+
+    /**
+     * 根据入参获取以迁移新用户记录
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
+    private ConsumerLog getConsumerLog(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        ConsumerLog rst;
+        if (chjUtConsumer == null && cbjUtConsumer != null) {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 1);
+            }else{
+                rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 1);
+            }
+        }else if(chjUtConsumer != null && cbjUtConsumer == null){
+            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(chjUtConsumer.getUnionid(), 0, 1);
+            }else{
+                rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 1);
+            }
+        }else {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 1);
+            }else{
+                if(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()) {
+                    rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 1);
+                }else{
+                    rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 1);
+                }
+            }
+        }
+        return rst;
     }
 
     /**

@@ -143,7 +143,7 @@ public class ConsumerBalanceController {
             }
         } else if (StrUtil.isNotBlank(curCbjUtConsumer.getAccount())) {
             //检查是否搬迁过
-            if (consumerLogService.countByAccount(curCbjUtConsumer.getAccount(), 1, 1) > 0) {
+            if (consumerLogService.countByCbjAccount(curCbjUtConsumer.getAccount(), 2, 1) > 0) {
                 return "exist account balance";
             }
             //存在脏数据同一unionid有两个账号

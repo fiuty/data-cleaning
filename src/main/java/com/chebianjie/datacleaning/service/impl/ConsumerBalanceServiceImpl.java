@@ -12,7 +12,6 @@ import com.chebianjie.datacleaning.repository.ConsumerBalanceRepository;
 import com.chebianjie.datacleaning.repository.ConsumerLogRepository;
 import com.chebianjie.datacleaning.repository.ConsumerRepository;
 import com.chebianjie.datacleaning.service.ConsumerBalanceService;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,23 +38,16 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
         try {
             ConsumerBalance consumerRealBalance;
             ConsumerBalance consumerGiveBalance;
-            Consumer consumer;
-            String unionid;
+            Consumer consumer = getConsumer(cbjUtConsumer, chjUtConsumer);
             if (chjUtConsumer == null && cbjUtConsumer != null) {
                 //1. 车惠捷数据null 以车便捷数据入库
-                consumer = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
-                unionid = cbjUtConsumer.getUnionid();
                 consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, cbjUtConsumer, null);
                 consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, cbjUtConsumer, null);
             }else if(chjUtConsumer != null && cbjUtConsumer == null){
-                consumer = consumerRepository.findByWechatUnionId(chjUtConsumer.getUnionid());
-                unionid = chjUtConsumer.getUnionid();
                 consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, null, chjUtConsumer);
                 consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, null, chjUtConsumer);
             }else {
                 //2. 两者不为空, 对比注册时间, 以较早注册的为主
-                consumer = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
-                unionid = cbjUtConsumer.getUnionid();
                 consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, cbjUtConsumer, chjUtConsumer);
                 consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, cbjUtConsumer, chjUtConsumer);
             }
@@ -63,7 +55,7 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
             consumerBalanceRepository.save(consumerGiveBalance);
             //3.迁移成功记录日志
             //判断是否有失败记录, 有则更新 无则插入
-            ConsumerLog curConsumerLog = consumerLogRepository.findOneByUnionidAndStatusAndType(unionid, 2, 0);
+            ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer, chjUtConsumer);
             if(curConsumerLog != null) {
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
@@ -87,7 +79,7 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
                 consumerLogRepository.save(temp);
             }
         }catch (Exception e){
-            log.error(e.getMessage());
+            e.printStackTrace();
             //4. 有任何报错记录log 失败
             ConsumerLog temp = new ConsumerLog();
             if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
@@ -109,6 +101,78 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
         }
     }
 
+    /**
+     * 根据入参获取以迁移新用户信息
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
+    private Consumer getConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        Consumer rst;
+        if (chjUtConsumer == null && cbjUtConsumer != null) {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
+                rst = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
+            }else{
+                rst = consumerRepository.findByPhone(cbjUtConsumer.getAccount());
+            }
+        }else if(chjUtConsumer != null && cbjUtConsumer == null){
+            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerRepository.findByWechatUnionId(chjUtConsumer.getUnionid());
+            }else{
+                rst = consumerRepository.findByPhone(chjUtConsumer.getAccount());
+            }
+        }else {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
+            }else{
+                rst = consumerRepository.findByPhone(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime() ? cbjUtConsumer.getAccount() : chjUtConsumer.getAccount());
+            }
+        }
+        return rst;
+    }
+
+    /**
+     * 根据入参获取以迁移新用户记录
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
+    private ConsumerLog getConsumerLog(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        ConsumerLog rst;
+        if (chjUtConsumer == null && cbjUtConsumer != null) {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 2);
+            }else{
+                rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 2);
+            }
+        }else if(chjUtConsumer != null && cbjUtConsumer == null){
+            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(chjUtConsumer.getUnionid(), 0, 2);
+            }else{
+                rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 2);
+            }
+        }else {
+            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 2);
+            }else{
+                if(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()) {
+                    rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 2);
+                }else{
+                    rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 2);
+                }
+            }
+        }
+        return rst;
+    }
+
+    /**
+     * 产生新用户余额数据
+     * @param consumer
+     * @param balanceType
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
     private ConsumerBalance transConsumerBalance(Consumer consumer, BalanceType balanceType, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
         ConsumerBalance rst = new ConsumerBalance();
 
@@ -123,6 +187,13 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
         return rst;
     }
 
+    /**
+     * 根据入参计算余额数值
+     * @param balanceType
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
     private int fixBalanceValue(BalanceType balanceType, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
         int rst;
         switch (balanceType){
