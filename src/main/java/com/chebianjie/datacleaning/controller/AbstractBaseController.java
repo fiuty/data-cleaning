@@ -40,8 +40,8 @@ public abstract class AbstractBaseController {
                 cbjUtConsumer =  utConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
                 cbjUtConsumer.setBalance(utConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
                 cbjUtConsumer.setGiveBalance(utConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
-                cbjUtConsumer.setConsumptionAmount(utConsumerList.stream().mapToInt(UtConsumer::getConsumptionAmount).sum());
-                cbjUtConsumer.setOrderNum(utConsumerList.stream().mapToLong(UtConsumer::getOrderNum).sum());
+                cbjUtConsumer.setConsumptionAmount(utConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
+                cbjUtConsumer.setOrderNum(utConsumerList.stream().filter(e -> e.getOrderNum() != null).mapToLong(UtConsumer::getOrderNum).sum());
             }
         }
         return cbjUtConsumer;
@@ -66,8 +66,8 @@ public abstract class AbstractBaseController {
             rst =  chjUtConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
             rst.setBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
             rst.setGiveBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
-            rst.setConsumptionAmount(chjUtConsumerList.stream().mapToInt(UtConsumer::getConsumptionAmount).sum());
-            rst.setOrderNum(chjUtConsumerList.stream().mapToLong(UtConsumer::getOrderNum).sum());
+            rst.setConsumptionAmount(chjUtConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
+            rst.setOrderNum(chjUtConsumerList.stream().filter(e -> e.getOrderNum() != null).mapToLong(UtConsumer::getOrderNum).sum());
         }else if(chjUtConsumerList.size() == 1){
             rst = chjUtConsumerList.get(0);
         }
