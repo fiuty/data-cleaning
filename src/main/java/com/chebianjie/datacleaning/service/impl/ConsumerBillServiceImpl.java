@@ -64,6 +64,9 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Autowired
     private UtUserTotalFlowService utUserTotalFlowService;
 
+    @Autowired
+    private BillLogService billLogService;
+
     private ThreadPoolTaskExecutor taskExecutor;
 
     @PostConstruct
@@ -89,13 +92,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         List<Consumer> consumers = consumerService.findAllByPage(pageNumber * pageSize, pageSize);
         log.info("页数：{}，用户数：{}", pageNumber, consumers.size());
         for (Consumer consumer : consumers) {
-            try {
-                //log.info("用户consumer:{}", JSONUtil.toJsonStr(consumer));
-                taskExecutor.execute(new ConsumerBillThread(consumer, consumerBillService));
-            } catch (Exception e) {
-                log.error("清洗用户流水出错,当前pageNumber:{}", pageNumber);
-                throw new RuntimeException(e);
-            }
+            taskExecutor.execute(new ConsumerBillThread(consumer, consumerBillService));
         }
     }
 
@@ -112,11 +109,13 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             }
             if (consumerLog == null) {
                 log.error("用户查询不到迁移log,consumerId:{}", consumer.getId());
+                billLogService.save(consumer.getUnionAccount(), 0);
                 return;
             }
             List<ConsumerBalance> consumerBalances = consumerBalanceService.findByUnionAccount(consumer.getUnionAccount());
             if (CollectUtil.collectionIsEmpty(consumerBalances)) {
                 log.error("用户余额为空,consumerId:{}", consumer.getId());
+                billLogService.save(consumer.getUnionAccount(), 0);
                 return;
             }
             List<UtUserTotalFlow> flows = new ArrayList<>(16);
@@ -136,6 +135,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             }
             if (CollectUtil.collectionIsEmpty(flows)) {
                 log.error("用户无流水,consumerId：{}", consumer.getId());
+                billLogService.save(consumer.getUnionAccount(), 1);
                 //用户无流水
                 return;
             }
@@ -160,9 +160,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
                 handleBillDetail(consumerBill, currentFlow);
             }
+            billLogService.save(consumer.getUnionAccount(), 1);
         } catch (Exception e) {
             log.error("清洗流水异常e：", e);
-            throw new RuntimeException(e);
+            billLogService.save(consumer.getUnionAccount(), 0);
         }
     }
 
@@ -187,8 +188,8 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             ConsumerBillChangeDetail saveBalanceDetail = this.save(balanceBillDetail);
             ConsumerBillChangeDetail saveGiveBalanceDetail = this.save(giveBalanceBillDetail);
             log.info("保存流水详情saveBalanceDetail：{}，saveGiveBalanceDetail：{}", saveBalanceDetail, saveGiveBalanceDetail);
-            updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getAfterChangeValue());
-            updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getAfterChangeValue());
+            updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getPreChangeValue());
+            updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getPreChangeValue());
         }
     }
 
@@ -213,7 +214,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     private ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
         ConsumerBillChangeDetail detail = new ConsumerBillChangeDetail();
         detail.setBillIdentify(billIdentify);
-        detail.setPreChangeValue(NumberUtil.addIfNull(afterChangeValue, changeValue));
+        detail.setPreChangeValue(NumberUtil.addIfNull(afterChangeValue, NumberUtil.negativeIfNull(changeValue)));
         detail.setChangeValue(changeValue);
         detail.setBalanceType(balanceType);
         detail.setAfterChangeValue(afterChangeValue);
