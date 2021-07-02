@@ -73,9 +73,9 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     public void init() {
         taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(10);
-        taskExecutor.setMaxPoolSize(50);
+        taskExecutor.setMaxPoolSize(30);
         taskExecutor.setKeepAliveSeconds(20);
-        taskExecutor.setQueueCapacity(10000);
+        taskExecutor.setQueueCapacity(1000);
         taskExecutor.initialize();
     }
 
@@ -96,6 +96,15 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         }
     }
 
+    @Override
+    public void cleanOne(int pageNumber, int pageSize) {
+        List<Consumer> consumers = consumerService.findAllByPage(pageNumber * pageSize, pageSize);
+        for (Consumer consumer : consumers) {
+            this.threadClean(consumer);
+        }
+    }
+
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public void threadClean(Consumer consumer) {
         try {
             ConsumerLog consumerLog = null;
@@ -185,9 +194,8 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             Integer changeGiveBalance = NumberUtil.addIfNull(flow.getNewGiveBalance(), NumberUtil.negativeIfNull(flow.getOldGiveBalance()));
             ConsumerBillChangeDetail balanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), balance, changeBalance, BalanceType.REAL_BALANCE, consumerBill.getPlatform());
             ConsumerBillChangeDetail giveBalanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), giveBalance, changeGiveBalance, BalanceType.GIVE_BALANCE, consumerBill.getPlatform());
-            ConsumerBillChangeDetail saveBalanceDetail = this.save(balanceBillDetail);
-            ConsumerBillChangeDetail saveGiveBalanceDetail = this.save(giveBalanceBillDetail);
-            log.info("保存流水详情saveBalanceDetail：{}，saveGiveBalanceDetail：{}", saveBalanceDetail, saveGiveBalanceDetail);
+            ConsumerBillChangeDetail saveBalanceDetail = consumerBillChangeDetailRepository.save(balanceBillDetail);
+            ConsumerBillChangeDetail saveGiveBalanceDetail = consumerBillChangeDetailRepository.save(giveBalanceBillDetail);
             updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getPreChangeValue());
             updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getPreChangeValue());
         }
@@ -228,7 +236,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         consumerBill.setPlatform(currentFlow.getPlatform());
         consumerBill.setUnionAccount(consumer.getUnionAccount());
         consumerBill.setBillIdentify(billIdentify);
-        consumerBill.setOrderId(NumberUtil.toString(currentFlow.getOrderId()));
+        consumerBill.setOrderId(currentFlow.getOrderId());
         consumerBill.setOrderNum(currentFlow.getOrderNum());
         consumerBill.setOrderPlatform(currentFlow.getPlatform());
         consumerBill.setCreateTime(toLocalDateTime(currentFlow.getCreateTime()));
@@ -376,8 +384,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 consumerBill.setPaymentMethod(PaymentMethod.BALANCE);
             }
         }
-        ConsumerBill save = this.save(consumerBill);
-        log.info("保存流水：{}", JSONUtil.toJsonStr(save));
+        consumerBillRepository.save(consumerBill);
         return consumerBill;
     }
 
@@ -474,16 +481,18 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
 
 
     private static DiscountType toDiscountType(Integer couponType) {
-        if (couponType == 1) {
-            return DiscountType.CASH;
-        } else if (couponType == 2) {
-            return DiscountType.REDUCTION;
-        } else if (couponType == 3) {
-            return DiscountType.DISCOUNT;
-        } else if (couponType == 4) {
-            return DiscountType.CAR;
-        } else if (couponType == 5) {
-            return DiscountType.SINOPEC;
+        if (couponType != null) {
+            if (couponType == 1) {
+                return DiscountType.CASH;
+            } else if (couponType == 2) {
+                return DiscountType.REDUCTION;
+            } else if (couponType == 3) {
+                return DiscountType.DISCOUNT;
+            } else if (couponType == 4) {
+                return DiscountType.CAR;
+            } else if (couponType == 5) {
+                return DiscountType.SINOPEC;
+            }
         }
         return null;
     }

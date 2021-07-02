@@ -10,4 +10,6 @@ public interface ConsumerBillService {
     void clean(int pageNumber, int pageSize);
 
     void threadClean(Consumer consumer);
+
+    void cleanOne(int pageNumber, int pageSize);
 }

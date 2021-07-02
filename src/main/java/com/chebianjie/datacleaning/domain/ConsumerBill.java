@@ -41,7 +41,7 @@ public class ConsumerBill {
     /**
      * 账单关联订单ID
      */
-    private String orderId;
+    private Long orderId;
 
     /**
      * 账单关联订单号

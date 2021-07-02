@@ -52,6 +52,22 @@ public class ConsumerBillController {
         log.info("总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
     }
 
+    @GetMapping("/consumerBillClean/one")
+    public void consumerBillCleanOne() {
+        int total = consumerService.countByRegistryTimeLessThanEqual(dataCleanConfiguration.getFlowConsumerTime());
+        int totalPage = computeTotalPage(total);
+        int pageSize = 1000;
+        Instant totalStart = Instant.now();
+        for (int pageNumber = dataCleanConfiguration.getFlwoConsumerStartPage(); pageNumber <= totalPage; pageNumber++) {
+            Instant now = Instant.now();
+            consumerBillService.cleanOne(pageNumber, pageSize);
+            Instant end = Instant.now();
+            log.info("总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
+        }
+        Instant totalEnd = Instant.now();
+        log.info("总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
+    }
+
     @GetMapping("/consumerBillClean/test")
     public void test(@RequestParam("id") Long id) {
         Consumer consumer = consumerService.findById(id);
