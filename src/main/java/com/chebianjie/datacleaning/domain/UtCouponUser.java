@@ -15,6 +15,10 @@ import java.io.Serializable;
 @Entity
 @Table(name = "ut_coupon_user")
 @Data
+@ToString(exclude = {"utCoupon", })
+@EqualsAndHashCode(exclude = {"utCoupon"})
+@DynamicInsert
+@DynamicUpdate
 public class UtCouponUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -52,6 +56,8 @@ public class UtCouponUser implements Serializable {
      */
     @Column(name = "consumer_id")
     private Long consumerId;
+
+    
 
     /**
      * ut_consumer表id 来自哪个用户的分享

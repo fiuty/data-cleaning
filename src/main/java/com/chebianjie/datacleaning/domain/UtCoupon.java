@@ -1,6 +1,8 @@
 package com.chebianjie.datacleaning.domain;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -11,6 +13,8 @@ import java.io.Serializable;
 @Entity
 @Data
 @Table(name = "ut_coupon")
+@DynamicInsert
+@DynamicUpdate
 public class UtCoupon implements Serializable {
 
     private static final long serialVersionUID = 1L;
