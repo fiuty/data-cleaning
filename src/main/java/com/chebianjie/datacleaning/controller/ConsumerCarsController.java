@@ -43,17 +43,6 @@ public class ConsumerCarsController {
     @Autowired
     ConsumerCarsLogService consumerCarsLogService;
 
-
-
-    @GetMapping("test")
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void test() {
-        consumerService.listMster();
-        consumerService.listSlave();
-
-    }
-
-
     @GetMapping("/sysnCbjUtUserCars")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String getCbjUtUserCars() {
