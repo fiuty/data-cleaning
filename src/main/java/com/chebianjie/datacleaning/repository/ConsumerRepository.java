@@ -22,8 +22,13 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
     Consumer findByWechatUnionId(String unionid);
 
     Consumer findByPhone(String phone);
+
     int countByRegistryTimeLessThanEqual(LocalDateTime flowConsumerTime);
 
     @Query(nativeQuery = true,value = "select * from consumer limit :pageNumber, :pageSize")
     List<Consumer> findAllByPage(@Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
+
+
+
+
 }
