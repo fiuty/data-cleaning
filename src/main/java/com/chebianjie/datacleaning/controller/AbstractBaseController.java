@@ -1,13 +1,12 @@
 package com.chebianjie.datacleaning.controller;
 
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.domain.UtCouponUser;
 import com.chebianjie.datacleaning.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -61,13 +60,17 @@ public abstract class AbstractBaseController {
      */
     protected UtConsumer fixChjUtConsumer(UtConsumer cbjUtConsumer){
         UtConsumer rst = null;
+        List<UtConsumer> chjUtConsumerListByUnionId = new ArrayList<>();
+        List<UtConsumer> chjUtConsumerListByAccount;
         List<UtConsumer> chjUtConsumerList;
+        //ut_consumer表jhi_account非空
+        chjUtConsumerListByAccount = chjUtConsumerService.getUtConsumerListByAccount(cbjUtConsumer.getAccount());
         if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-            chjUtConsumerList = chjUtConsumerService.getUtConsumerListByUnionid(cbjUtConsumer.getUnionid());
-        }else{
-            chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(cbjUtConsumer.getAccount());
+            chjUtConsumerListByUnionId = chjUtConsumerService.getUtConsumerListByUnionid(cbjUtConsumer.getUnionid());
         }
-
+        //整合list
+        chjUtConsumerListByAccount.addAll(chjUtConsumerListByUnionId);
+        chjUtConsumerList = chjUtConsumerListByAccount;
         if(chjUtConsumerList.size() > 1){
             //整合所有数据
             rst =  chjUtConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
@@ -86,14 +89,20 @@ public abstract class AbstractBaseController {
      * @param cbjUtConsumer
      * @return false - 未清洗  true - 已清洗
      */
-    protected Boolean checkCleanConsumer(UtConsumer cbjUtConsumer){
+    protected Boolean checkCleanConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
         boolean rst = false;
-        if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
-            if (consumerLogService.getOneByUnionId(cbjUtConsumer.getUnionid(), 1, 1) != null) {
-                rst = true;
+        if(chjUtConsumer == null) {
+            if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
+                if (consumerLogService.getOneByUnionId(cbjUtConsumer.getUnionid(), 1, 1) != null) {
+                    rst = true;
+                }
+            } else if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
+                if (consumerLogService.getOneByCbjAccount(cbjUtConsumer.getAccount(), 1, 1) != null) {
+                    rst = true;
+                }
             }
-        }else if(StrUtil.isNotBlank(cbjUtConsumer.getAccount())){
-            if(consumerLogService.getOneByCbjAccount(cbjUtConsumer.getAccount(), 1, 1) != null){
+        }else{
+            if(consumerLogService.getOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 1, 1) != null){
                 rst = true;
             }
         }

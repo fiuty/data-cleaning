@@ -2,6 +2,7 @@ package com.chebianjie.datacleaning.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.chebianjie.datacleaning.domain.Consumer;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.threads.ConsumerTask;
@@ -50,12 +51,13 @@ public class ConsumerController extends AbstractBaseController{
             //2.处理数据
             for(int i = 1; i <= utConsumerList.size(); i++){
                 UtConsumer curCbjUtConsumer = utConsumerList.get(i-1);
-                //3.存在同一unionid多条数据需提前合并
+                //3.针对存在同一unionid多条数据需提前合并
                 curCbjUtConsumer = fixCbjUtConsumer(curCbjUtConsumer);
                 //4.获取与当前车便捷用户对应的车惠捷用户
-                if(!checkCleanConsumer(curCbjUtConsumer)){
-                    UtConsumer chjUtConsumer = fixChjUtConsumer(curCbjUtConsumer);
-                    //5.处理数据
+                UtConsumer chjUtConsumer = fixChjUtConsumer(curCbjUtConsumer);
+                //5.检查是否已经清洗
+                if(!checkCleanConsumer(curCbjUtConsumer, chjUtConsumer)){
+                    //6.处理数据
                     es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
                 }
             }
@@ -69,7 +71,7 @@ public class ConsumerController extends AbstractBaseController{
     /**
      * 同步迁移用户数据 - 以车惠捷为主
      * @return
-     */
+     *//*
     @GetMapping("/synch2")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Object synchConsumer2(){
@@ -103,58 +105,27 @@ public class ConsumerController extends AbstractBaseController{
         es.shutdown();
 
         return "finish";
-    }
+    }*/
 
     @GetMapping("/test")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Object testSynch(@RequestParam("id") long id){
         //1.获取车便捷用户
         UtConsumer curCbjUtConsumer = cbjUtConsumerService.getUtConsumerById(id);
-        //2.与车惠捷用户对比  ---- 先用unionid合并,若unionid为空则用account
-        UtConsumer chjUtConsumer = null;
-        if (StrUtil.isNotBlank(curCbjUtConsumer.getUnionid())) {
-            //检查是否搬迁过
-            if (consumerLogService.getOneByUnionId(curCbjUtConsumer.getUnionid(), 1, 1) != null) {
-                return "exist unionid";
-            }
-            //存在脏数据同一unionid有两个账号
-            List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByUnionid(curCbjUtConsumer.getUnionid());
-            if (chjUtConsumerList.size() > 1) {
-                //非unique返回记录不处理
-                ConsumerLog temp = new ConsumerLog();
-                temp.setUnionid(curCbjUtConsumer.getUnionid());
-                temp.setCbjId(curCbjUtConsumer.getId());
-                temp.setStatus(2);
-                temp.setType(1);
-                consumerLogService.saveOne(temp);
-
-                return "not unique unionid";
-            }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
-                chjUtConsumer = chjUtConsumerList.get(0);
-            }
-        } else if (StrUtil.isNotBlank(curCbjUtConsumer.getAccount())) {
-            //检查是否搬迁过
-            if (consumerLogService.getOneByCbjAccount(curCbjUtConsumer.getAccount(), 1, 1) != null) {
-                return "exist account";
-            }
-            //存在脏数据同一unionid有两个账号
-            List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(curCbjUtConsumer.getAccount());
-            if (chjUtConsumerList.size() > 1) {
-                //非unique返回记录不处理
-                ConsumerLog temp = new ConsumerLog();
-                temp.setCbjAccount(curCbjUtConsumer.getAccount());
-                temp.setCbjId(curCbjUtConsumer.getId());
-                temp.setStatus(2);
-                temp.setType(1);
-                consumerLogService.saveOne(temp);
-
-                return "not unique account";
-            }else if(CollectionUtil.isNotEmpty(chjUtConsumerList)){
-                chjUtConsumer = chjUtConsumerList.get(0);
+        //3.针对存在同一unionid多条数据需提前合并
+        curCbjUtConsumer = fixCbjUtConsumer(curCbjUtConsumer);
+        //4.获取与当前车便捷用户对应的车惠捷用户
+        UtConsumer chjUtConsumer = fixChjUtConsumer(curCbjUtConsumer);
+        //5.检查是否已经清洗
+        if(!checkCleanConsumer(curCbjUtConsumer, chjUtConsumer)){
+            //3.处理数据
+            Consumer consumer = consumerService.mergeConsumer(curCbjUtConsumer, chjUtConsumer);
+            if(consumer != null){
+                //迁移用户余额
+                consumerBalanceService.mergeByConsumer(consumer, curCbjUtConsumer, chjUtConsumer);
             }
         }
-        //3.处理数据
-        consumerService.mergeConsumer(curCbjUtConsumer, chjUtConsumer);
+
 
         return "test finish";
     }
