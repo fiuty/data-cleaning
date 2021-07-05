@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * @author zhengdayue
  * @date: 2021-07-01
@@ -28,5 +30,11 @@ public class BillLogServiceImpl implements BillLogService {
         billLog.setUnionAccount(unionAccount);
         billLog.setStatus(status);
         billLogRepository.save(billLog);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<BillLog> findByStatus(Integer status) {
+         return billLogRepository.findAllByStatus(status);
     }
 }

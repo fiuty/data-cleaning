@@ -31,9 +31,6 @@ public class ConsumerBillController {
     private DataCleanConfiguration dataCleanConfiguration;
 
     @Autowired
-    private ConsumerRepository consumerRepository;
-
-    @Autowired
     private ConsumerService consumerService;
 
     @GetMapping("/consumerBillClean")
@@ -74,6 +71,11 @@ public class ConsumerBillController {
         if (consumer != null) {
             consumerBillService.threadClean(consumer);
         }
+    }
+
+    @GetMapping("/delete/fail")
+    public void deleteFail() {
+        consumerBillService.deleteFail();
     }
 
 
