@@ -31,6 +31,18 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog getOneByCbjIdAndStatusAndType(long cbjId, int status, int type) {
+        return consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjId, status, type);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog getOneByChjIdAndStatusAndType(long chjId, int status, int type) {
+        return consumerLogRepository.findOneByChjIdAndStatusAndType(chjId, status, type);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public void saveOne(ConsumerLog consumerLog) {
         consumerLogRepository.save(consumerLog);
     }

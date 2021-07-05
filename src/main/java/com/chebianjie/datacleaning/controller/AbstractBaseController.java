@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
+import com.chebianjie.datacleaning.domain.UtCouponUser;
 import com.chebianjie.datacleaning.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,10 +23,16 @@ public abstract class AbstractBaseController {
     protected ConsumerLogService consumerLogService;
 
     @Autowired
+    protected ConsumerCouponLogService consumerCouponLogService;
+
+    @Autowired
     protected ConsumerBalanceService consumerBalanceService;
 
     @Autowired
     protected ConsumerService consumerService;
+
+    @Autowired
+    protected UtCouponUserService utCouponUserService;
 
     /**
      * 处理同一unionid多条数据情况
@@ -75,11 +82,11 @@ public abstract class AbstractBaseController {
     }
 
     /**
-     * 检测是否已清洗
+     * 检测是否已清洗 - 用户
      * @param cbjUtConsumer
      * @return false - 未清洗  true - 已清洗
      */
-    protected Boolean checkClean(UtConsumer cbjUtConsumer){
+    protected Boolean checkCleanConsumer(UtConsumer cbjUtConsumer){
         boolean rst = false;
         if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
             if (consumerLogService.getOneByUnionId(cbjUtConsumer.getUnionid(), 1, 1) != null) {
@@ -87,6 +94,22 @@ public abstract class AbstractBaseController {
             }
         }else if(StrUtil.isNotBlank(cbjUtConsumer.getAccount())){
             if(consumerLogService.getOneByCbjAccount(cbjUtConsumer.getAccount(), 1, 1) != null){
+                rst = true;
+            }
+        }
+        return rst;
+    }
+
+    /**
+     * 检测是否已清洗 - 优惠券
+     * @param utCouponUser
+     * @param  type  1.用户优惠券迁移 - 车便捷 2.用户优惠券迁移 - 车惠捷
+     * @return false - 未清洗  true - 已清洗
+     */
+    protected Boolean checkCleanCoupon(UtCouponUser utCouponUser, int type){
+        boolean rst = false;
+        if(utCouponUser.getConsumerId() != null ) {
+            if (consumerCouponLogService.getOneByUtCouponUserIdAndStatusAndType(utCouponUser.getId(), 1, type) != null) {
                 rst = true;
             }
         }

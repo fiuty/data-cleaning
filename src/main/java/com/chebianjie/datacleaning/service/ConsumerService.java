@@ -1,6 +1,7 @@
 package com.chebianjie.datacleaning.service;
 
 import com.chebianjie.datacleaning.domain.Consumer;
+import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 
 import java.time.LocalDateTime;
@@ -23,4 +24,6 @@ public interface ConsumerService {
     List<Consumer> findAllByPage(int pageNumber, int pageSize);
 
     Consumer findById(Long id);
+
+    Consumer getByConsumerLog(ConsumerLog consumerLog);
 }

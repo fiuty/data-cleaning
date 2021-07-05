@@ -3,11 +3,13 @@ package com.chebianjie.datacleaning.service.impl;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.domain.Consumer;
-import com.chebianjie.datacleaning.domain.UtConsumer;
-import com.chebianjie.datacleaning.domain.UtCoupon;
 import com.chebianjie.datacleaning.domain.UtCouponUser;
-import com.chebianjie.datacleaning.repository.*;
+import com.chebianjie.datacleaning.repository.ConsumerLogRepository;
+import com.chebianjie.datacleaning.repository.ConsumerRepository;
+import com.chebianjie.datacleaning.repository.UtConsumerRepository;
+import com.chebianjie.datacleaning.repository.UtCouponUserRepository;
 import com.chebianjie.datacleaning.service.UtCouponUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,20 +23,23 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(propagation = Propagation.REQUIRES_NEW)
+@Slf4j
 public class UtCouponUserServiceImpl implements UtCouponUserService {
 
     @Autowired
     UtCouponUserRepository utCouponUserRepository;
 
-    @Autowired
-    ConsumerLogRepository consumerLogRepository;
+    @Override
+    @DataSource(name = DataSourcesType.CBJ_COUPON)
+    public UtCouponUser getCbjOneById(long id) {
+        return utCouponUserRepository.findById(id).orElse(null);
+    }
 
-    @Autowired
-    UtConsumerRepository utConsumerRepository;
-
-    @Autowired
-    ConsumerRepository consumerRepository;
-
+    @Override
+    @DataSource(name = DataSourcesType.CHJ_COUPON)
+    public UtCouponUser getChjOneById(long id) {
+        return utCouponUserRepository.findById(id).orElse(null);
+    }
 
     @Override
     @DataSource(name = DataSourcesType.CBJ_COUPON)
@@ -48,34 +53,28 @@ public class UtCouponUserServiceImpl implements UtCouponUserService {
         return utCouponUserRepository.findAll(pageable);
     }
 
-
     @Override
-    @DataSource(name = DataSourcesType.MASTER)
-    public UtConsumer getCbjUtConsumerById(Long Uid) {
-        return utConsumerRepository.findById(Uid).orElse(null);
+    @DataSource(name = DataSourcesType.CBJ_COUPON)
+    public void mergeCbjConsumerCoupon(UtCouponUser utCouponUser, Consumer consumer) throws Exception {
+        try {
+            utCouponUser.setConsumerUnionAccount(consumer.getUnionAccount());
+            utCouponUserRepository.save(utCouponUser);
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new Exception(e.getMessage());
+        }
     }
 
-
     @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public UtConsumer getChjUtConsumerById(Long Uid) {
-        return utConsumerRepository.findById(Uid).orElse(null);
+    @DataSource(name = DataSourcesType.CHJ_COUPON)
+    public void mergeChjConsumerCoupon(UtCouponUser utCouponUser, Consumer consumer) throws Exception {
+        try {
+            utCouponUser.setConsumerUnionAccount(consumer.getUnionAccount());
+            utCouponUserRepository.save(utCouponUser);
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new Exception(e.getMessage());
+        }
     }
-
-
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    public Consumer getConsumerByPhone(String phone) {
-        return consumerRepository.findByPhone(phone);
-    }
-
-
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    public Consumer getConsumerByUnionid(String unionid) {
-        return consumerRepository.findByWechatUnionId(unionid);
-    }
-
-
 
 }

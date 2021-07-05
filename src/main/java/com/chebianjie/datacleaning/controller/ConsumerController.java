@@ -53,7 +53,7 @@ public class ConsumerController extends AbstractBaseController{
                 //3.存在同一unionid多条数据需提前合并
                 curCbjUtConsumer = fixCbjUtConsumer(curCbjUtConsumer);
                 //4.获取与当前车便捷用户对应的车惠捷用户
-                if(!checkClean(curCbjUtConsumer)){
+                if(!checkCleanConsumer(curCbjUtConsumer)){
                     UtConsumer chjUtConsumer = fixChjUtConsumer(curCbjUtConsumer);
                     //5.处理数据
                     es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));

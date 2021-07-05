@@ -244,4 +244,16 @@ public class ConsumerServiceImpl implements ConsumerService {
     public Consumer findById(Long id) {
         return consumerRepository.findById(id).orElse(null);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer getByConsumerLog(ConsumerLog consumerLog) {
+        Consumer rst = null;
+        if(consumerLog.getUnionid() != null && StrUtil.isNotBlank(consumerLog.getUnionid())){
+            rst = consumerRepository.findByWechatUnionId(consumerLog.getUnionid());
+        }else if(StrUtil.isNotBlank(consumerLog.getCbjAccount())){
+            rst = consumerRepository.findByPhone(consumerLog.getCbjAccount());
+        }
+        return rst;
+    }
 }

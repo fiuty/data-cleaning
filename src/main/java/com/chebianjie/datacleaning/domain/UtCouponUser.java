@@ -15,8 +15,6 @@ import java.io.Serializable;
 @Entity
 @Table(name = "ut_coupon_user")
 @Data
-@ToString(exclude = {"utCoupon", })
-@EqualsAndHashCode(exclude = {"utCoupon"})
 @DynamicInsert
 @DynamicUpdate
 public class UtCouponUser implements Serializable {
@@ -46,6 +44,12 @@ public class UtCouponUser implements Serializable {
     private String consumerAccount;
 
     /**
+     * 用户中心合并后用户的唯一UUID - consumer表的union_account
+     */
+    @Column(name = "consumer_union_account")
+    private String consumerUnionAccount;
+
+    /**
      * 用户昵称
      */
     @Column(name = "consumer_nickname")
@@ -56,8 +60,6 @@ public class UtCouponUser implements Serializable {
      */
     @Column(name = "consumer_id")
     private Long consumerId;
-
-    
 
     /**
      * ut_consumer表id 来自哪个用户的分享
@@ -250,10 +252,6 @@ public class UtCouponUser implements Serializable {
      */
     @Column(name = "site_configure_type")
     private Integer siteConfigureType;
-
-    @JoinColumn(name = "coupon_id")
-    @ManyToOne(cascade = CascadeType.ALL)
-    private UtCoupon utCoupon;
 
     /**
      * 适用业务：0-全部、1-洗车、2-车服

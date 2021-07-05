@@ -1,8 +1,6 @@
 package com.chebianjie.datacleaning.service;
 
 import com.chebianjie.datacleaning.domain.Consumer;
-import com.chebianjie.datacleaning.domain.UtConsumer;
-import com.chebianjie.datacleaning.domain.UtCoupon;
 import com.chebianjie.datacleaning.domain.UtCouponUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,25 +11,19 @@ import org.springframework.data.domain.Pageable;
  */
 public interface UtCouponUserService {
 
+    UtCouponUser getCbjOneById(long id);
+
+    UtCouponUser getChjOneById(long id);
 
     //车便捷
-    public Page<UtCouponUser> pageCbjUtCouponUser(Pageable pageable);
+    Page<UtCouponUser> pageCbjUtCouponUser(Pageable pageable);
 
     //车惠捷
-    public Page<UtCouponUser> pageChjUtCouponUser(Pageable pageable);
+    Page<UtCouponUser> pageChjUtCouponUser(Pageable pageable);
 
     //车便捷
-    public UtConsumer getCbjUtConsumerById(Long Uid);
+    void mergeCbjConsumerCoupon(UtCouponUser utCouponUser, Consumer consumer) throws Exception;
 
     //车惠捷
-    public UtConsumer getChjUtConsumerById(Long Uid);
-
-    //用户中心
-    public Consumer getConsumerByPhone(String phone);
-
-    //用户中心
-    public Consumer getConsumerByUnionid(String unionid);
-
-
-
+    void mergeChjConsumerCoupon(UtCouponUser utCouponUser, Consumer consumer) throws Exception;
 }

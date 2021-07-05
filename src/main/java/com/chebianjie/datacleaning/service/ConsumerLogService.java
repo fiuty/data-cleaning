@@ -8,6 +8,10 @@ public interface ConsumerLogService {
 
     ConsumerLog getOneByCbjAccount(String cbjAccount, int type, int status);
 
+    ConsumerLog getOneByCbjIdAndStatusAndType(long cbjId, int status, int type);
+
+    ConsumerLog getOneByChjIdAndStatusAndType(long chjId, int status, int type);
+
     void saveOne(ConsumerLog consumerLog);
 
     int countByUnionId(String unionid, int type, int status);
