@@ -3,8 +3,7 @@ package com.chebianjie.datacleaning.domain;
 import com.chebianjie.datacleaning.domain.enums.Platform;
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author zhengdayue
@@ -15,6 +14,8 @@ import javax.persistence.Table;
 @Table
 public class UtUserTotalFlowLog {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
