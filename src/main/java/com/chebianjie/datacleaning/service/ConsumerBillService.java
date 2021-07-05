@@ -12,4 +12,10 @@ public interface ConsumerBillService {
     void threadClean(Consumer consumer);
 
     void cleanOne(int pageNumber, int pageSize);
+
+    void deleteFail();
+
+    void consumerBillJob();
+
+
 }

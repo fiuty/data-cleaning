@@ -17,7 +17,7 @@ public class DynamicDataSourceContextHolder {
      * 设置当前线程的数据源变量
      */
     public static void setDataSourceType(String dataSourceType) {
-        log.info("已切换到{}数据源", dataSourceType);
+        //log.info("已切换到{}数据源", dataSourceType);
         contextHolder.set(dataSourceType);
     }
 

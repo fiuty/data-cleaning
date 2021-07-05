@@ -1,16 +1,19 @@
 package com.chebianjie.datacleaning.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.chebianjie.common.core.constant.RabbitMqConstants;
 import com.chebianjie.common.core.util.CollectUtil;
 import com.chebianjie.common.core.util.NumberUtil;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.domain.*;
 import com.chebianjie.datacleaning.domain.enums.*;
+import com.chebianjie.datacleaning.dto.UtUserTotalFlowMessage;
 import com.chebianjie.datacleaning.repository.*;
 import com.chebianjie.datacleaning.service.*;
 import com.chebianjie.datacleaning.threads.ConsumerBillThread;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -20,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -67,6 +72,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Autowired
     private BillLogService billLogService;
 
+    @Autowired
+    private DataSynTimeRepository dataSynTimeRepository;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     private ThreadPoolTaskExecutor taskExecutor;
 
     @PostConstruct
@@ -102,6 +113,17 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         for (Consumer consumer : consumers) {
             this.threadClean(consumer);
         }
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void deleteFail() {
+        List<BillLog> billLogs = billLogService.findByStatus(0);
+        List<String> unionAccount = billLogs.stream().map(BillLog::getUnionAccount).collect(Collectors.toList());
+        List<ConsumerBill> consumerBills = consumerBillRepository.findAllByUnionAccountIn(unionAccount);
+        List<String> billIdentifies = consumerBills.stream().map(ConsumerBill::getBillIdentify).collect(Collectors.toList());
+        consumerBillChangeDetailRepository.deleteAllByBillIdentifyIn(billIdentifies);
+        consumerBillRepository.deleteAll(consumerBills);
     }
 
     @DataSource(name = DataSourcesType.USERPLATFORM)
@@ -178,7 +200,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
 
     private void updateConsumerBalance(String unionAccount, BalanceType balanceType, Integer value) {
         //account+balanceType用户余额、赠送余额
-        redisTemplate.opsForValue().set(unionAccount + balanceType, NumberUtil.toString(NumberUtil.getIfNull(value)), 10, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(unionAccount + balanceType, NumberUtil.toString(NumberUtil.getIfNull(value)), 1, TimeUnit.MINUTES);
     }
 
     private Integer getConsumerBalance(String unionAccount, BalanceType balanceType) {
@@ -194,8 +216,8 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             Integer changeGiveBalance = NumberUtil.addIfNull(flow.getNewGiveBalance(), NumberUtil.negativeIfNull(flow.getOldGiveBalance()));
             ConsumerBillChangeDetail balanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), balance, changeBalance, BalanceType.REAL_BALANCE, consumerBill.getPlatform());
             ConsumerBillChangeDetail giveBalanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), giveBalance, changeGiveBalance, BalanceType.GIVE_BALANCE, consumerBill.getPlatform());
-            ConsumerBillChangeDetail saveBalanceDetail = consumerBillChangeDetailRepository.save(balanceBillDetail);
-            ConsumerBillChangeDetail saveGiveBalanceDetail = consumerBillChangeDetailRepository.save(giveBalanceBillDetail);
+            consumerBillChangeDetailRepository.save(balanceBillDetail);
+            consumerBillChangeDetailRepository.save(giveBalanceBillDetail);
             updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getPreChangeValue());
             updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getPreChangeValue());
         }
@@ -521,5 +543,17 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     private ConsumerBillChangeDetail save(ConsumerBillChangeDetail consumerBillChangeDetail) {
         return consumerBillChangeDetailRepository.save(consumerBillChangeDetail);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void consumerBillJob() {
+        DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(1);
+        LocalDateTime timeFrom = dataSynTime.getLastTime();
+        LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
+
+        //同步完发到消息队列
+        UtUserTotalFlowMessage message = new UtUserTotalFlowMessage();
+        rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message);
     }
 }
