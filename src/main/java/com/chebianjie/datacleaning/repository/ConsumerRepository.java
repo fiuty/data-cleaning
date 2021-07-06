@@ -29,6 +29,7 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
     List<Consumer> findAllByPage(@Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
 
 
-
+    @Query(nativeQuery = true,value = "select count(1) from consumer")
+    Long findTotalConsumer();
 
 }

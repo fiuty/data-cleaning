@@ -256,4 +256,18 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
         return rst;
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer findByPhone(String phone) {
+        return consumerRepository.findByPhone(phone);
+    }
+
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Long findTotalCount() {
+        Long totalConsumer = consumerRepository.findTotalConsumer();
+        return totalConsumer;
+    }
 }

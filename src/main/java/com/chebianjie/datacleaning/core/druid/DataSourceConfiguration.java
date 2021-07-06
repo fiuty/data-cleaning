@@ -18,7 +18,6 @@ import java.util.Map;
  */
 @Configuration
 public class DataSourceConfiguration {
-
     /**
      * 主库
      */

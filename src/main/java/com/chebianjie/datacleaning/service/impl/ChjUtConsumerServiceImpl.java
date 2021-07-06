@@ -50,4 +50,10 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
     public List<UtConsumer> getUtConsumerListByUnionid(String unionid) {
         return utConsumerRepository.findListByUnionid(unionid);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public UtConsumer getUtConsumerByPhone(String phone) {
+        return utConsumerRepository.findByAccount(phone);
+    }
 }

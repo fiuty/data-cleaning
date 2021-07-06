@@ -26,4 +26,11 @@ public interface ConsumerService {
     Consumer findById(Long id);
 
     Consumer getByConsumerLog(ConsumerLog consumerLog);
+
+
+    Consumer findByPhone(String phone);
+
+
+    Long findTotalCount();
+
 }
