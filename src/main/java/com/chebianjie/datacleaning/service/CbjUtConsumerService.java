@@ -13,4 +13,8 @@ public interface CbjUtConsumerService {
     UtConsumer getUtConsumerById(Long id);
 
     List<UtConsumer> listByUnionid(String unionid);
+
+
+    UtConsumer getUtConsumerByPhone(String phone);
+
 }

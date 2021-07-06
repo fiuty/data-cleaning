@@ -22,4 +22,7 @@ public interface ChjUtConsumerService {
     List<UtConsumer> getUtConsumerListByAccount(String account);
 
     List<UtConsumer> getUtConsumerListByUnionid(String unionid);
+
+
+    UtConsumer getUtConsumerByPhone(String phone);
 }

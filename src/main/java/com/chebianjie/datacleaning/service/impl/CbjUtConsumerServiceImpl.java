@@ -38,4 +38,12 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     public List<UtConsumer> listByUnionid(String unionid) {
         return utConsumerRepository.findListByUnionid(unionid);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public UtConsumer getUtConsumerByPhone(String phone) {
+        return utConsumerRepository.findByAccount(phone);
+    }
+
+
 }
