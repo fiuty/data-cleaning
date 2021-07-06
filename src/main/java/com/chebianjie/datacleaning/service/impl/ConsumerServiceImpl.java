@@ -32,7 +32,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 @Transactional(propagation = Propagation.REQUIRES_NEW)
-public class ConsumerServiceImpl implements ConsumerService {
+public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements ConsumerService {
 
     @Autowired
     private UtConsumerRepository utConsumerRepository;
@@ -68,9 +68,10 @@ public class ConsumerServiceImpl implements ConsumerService {
                 //1. 车惠捷数据null 以车便捷数据入库
                 consumer = transConsumer(cbjUtConsumer, 1);
             }else if(chjUtConsumer != null && cbjUtConsumer == null){
+                //2. 车便捷数据null 以车惠捷数据入库
                 consumer = transConsumer(chjUtConsumer, 2);
             }else {
-                //2. 两者不为空, 对比注册时间, 以较早注册的为主
+                //3. 两者不为空, 对比注册时间, 以较早注册的为主
                 if (cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()){
                     consumer = transConsumer(cbjUtConsumer, 1);
                 }else{
@@ -86,9 +87,7 @@ public class ConsumerServiceImpl implements ConsumerService {
                 consumerLogRepository.save(curConsumerLog);
             }else{
                 ConsumerLog temp = new ConsumerLog();
-                if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
-                    temp.setUnionid(cbjUtConsumer.getUnionid());
-                }
+                temp.setUnionid(fixConsumerLogUnionid(cbjUtConsumer , chjUtConsumer));
                 temp.setCbjId(cbjUtConsumer.getId());
                 if (chjUtConsumer != null) {
                     temp.setChjId(chjUtConsumer.getId());
@@ -125,40 +124,6 @@ public class ConsumerServiceImpl implements ConsumerService {
             consumerLogRepository.save(temp);
         }
         return consumer;
-    }
-
-    /**
-     * 根据入参获取以迁移新用户记录
-     * @param cbjUtConsumer
-     * @param chjUtConsumer
-     * @return
-     */
-    private ConsumerLog getConsumerLog(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
-        ConsumerLog rst;
-        if (chjUtConsumer == null && cbjUtConsumer != null) {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 1);
-            }else{
-                rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 1);
-            }
-        }else if(chjUtConsumer != null && cbjUtConsumer == null){
-            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(chjUtConsumer.getUnionid(), 0, 1);
-            }else{
-                rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 1);
-            }
-        }else {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 1);
-            }else{
-                if(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()) {
-                    rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 1);
-                }else{
-                    rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 1);
-                }
-            }
-        }
-        return rst;
     }
 
     /**

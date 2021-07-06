@@ -43,12 +43,12 @@ public class ConsumerController extends AbstractBaseController{
         Page<UtConsumer> utConsumerPage;
         do{
             //1.获取车便捷用户
-            PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.ASC, "id");
+            PageRequest pageRequest = PageRequest.of(page, size);
             log.info("page: {} size: {}", page, size);
             utConsumerPage = cbjUtConsumerService.pageUtConsumer(pageRequest);
             totalPages = utConsumerPage.getTotalPages();
             List<UtConsumer> utConsumerList = utConsumerPage.getContent();
-            //2.处理数据
+            //2.开始遍历
             for(int i = 1; i <= utConsumerList.size(); i++){
                 UtConsumer curCbjUtConsumer = utConsumerList.get(i-1);
                 //3.针对存在同一unionid多条数据需提前合并
@@ -124,6 +124,8 @@ public class ConsumerController extends AbstractBaseController{
                 //迁移用户余额
                 consumerBalanceService.mergeByConsumer(consumer, curCbjUtConsumer, chjUtConsumer);
             }
+        }else{
+            return "exist";
         }
 
 

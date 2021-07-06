@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 @Slf4j
 @Transactional(propagation = Propagation.REQUIRES_NEW)
-public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
+public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implements ConsumerBalanceService {
 
     @Autowired
     private ConsumerRepository consumerRepository;
@@ -131,9 +131,7 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
                 consumerLogRepository.save(curConsumerLog);
             }else{
                 ConsumerLog temp = new ConsumerLog();
-                if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
-                    temp.setUnionid(cbjUtConsumer.getUnionid());
-                }
+                temp.setUnionid(fixConsumerLogUnionid(cbjUtConsumer, chjUtConsumer));
                 temp.setCbjId(cbjUtConsumer.getId());
                 if (chjUtConsumer != null) {
                     temp.setChjId(chjUtConsumer.getId());
@@ -196,40 +194,6 @@ public class ConsumerBalanceServiceImpl implements ConsumerBalanceService {
                 rst = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
             }else{
                 rst = consumerRepository.findByPhone(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime() ? cbjUtConsumer.getAccount() : chjUtConsumer.getAccount());
-            }
-        }
-        return rst;
-    }
-
-    /**
-     * 根据入参获取以迁移新用户记录
-     * @param cbjUtConsumer
-     * @param chjUtConsumer
-     * @return
-     */
-    private ConsumerLog getConsumerLog(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
-        ConsumerLog rst;
-        if (chjUtConsumer == null && cbjUtConsumer != null) {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 2);
-            }else{
-                rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 2);
-            }
-        }else if(chjUtConsumer != null && cbjUtConsumer == null){
-            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(chjUtConsumer.getUnionid(), 0, 2);
-            }else{
-                rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 2);
-            }
-        }else {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerLogRepository.findOneByUnionidAndStatusAndType(cbjUtConsumer.getUnionid(), 0, 2);
-            }else{
-                if(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()) {
-                    rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 2);
-                }else{
-                    rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 2);
-                }
             }
         }
         return rst;
