@@ -1,7 +1,7 @@
 package com.chebianjie.datacleaning.config;
 
 
-import com.chebianjie.common.core.constant.RabbitMqConstants;
+import com.chebianjie.datacleaning.constants.RabbitMqConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
@@ -14,8 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * rabbitmq配置类
@@ -52,19 +50,24 @@ public class RabbitmqConfig {
     }
 
     /**
-     * 多个消费者
-     *
-     * @return
+     *多个消费者实例的配置
      */
     @Bean(name = "multiListenerContainer")
-    public SimpleRabbitListenerContainerFactory multiListenerContainer() {
+    public SimpleRabbitListenerContainerFactory multiListenerContainer(){
+        //定义消息监听器所在的容器工厂
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factoryConfigurer.configure(factory, connectionFactory);
+        //设置容器工厂所用的实例
+        factory.setConnectionFactory(connectionFactory);
+        //设置消息在传输中的格式。在这里采用JSON的格式进行传输
         factory.setMessageConverter(new Jackson2JsonMessageConverter());
-        factory.setAcknowledgeMode(AcknowledgeMode.NONE);
-        factory.setConcurrentConsumers(env.getProperty("spring.rabbitmq.listener.simple.concurrency", int.class));
-        factory.setMaxConcurrentConsumers(env.getProperty("spring.rabbitmq.listener.simple.max-concurrency", int.class));
-        factory.setPrefetchCount(env.getProperty("spring.rabbitmq.listener.simple.prefetch", int.class));
+        //确认消费模式为自动确认机制
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        //设置并发消费者实例的初始数量。
+        factory.setConcurrentConsumers(30);
+        //设置并发消费者实例的最大数量。
+        factory.setMaxConcurrentConsumers(30);
+        //设置并发消费者实例中每个实例拉取的消息数量。
+        factory.setPrefetchCount(10);
         return factory;
     }
 
@@ -74,8 +77,8 @@ public class RabbitmqConfig {
         connectionFactory.setPublisherReturns(true);
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMandatory(true);
-        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> log.info("消息发送成功:correlationData({}),ack({}),cause({})", correlationData, ack, cause));
-        rabbitTemplate.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> log.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}", exchange, routingKey, replyCode, replyText, message));
+        //rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> log.info("消息发送成功:correlationData({}),ack({}),cause({})", correlationData, ack, cause));
+        //rabbitTemplate.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> log.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}", exchange, routingKey, replyCode, replyText, message));
         rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
         return rabbitTemplate;
 
@@ -121,5 +124,21 @@ public class RabbitmqConfig {
         return BindingBuilder.bind(billQueue()).to(billExchange()).with(RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY);
     }
 
+    //流水队列
+    @Bean
+    public Queue firstBillQueue() {
+        return new Queue(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_QUEUE, true);
+    }
+
+    //流水交换机
+    @Bean
+    public DirectExchange firstBillExchange() {
+        return new DirectExchange(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, true, false);
+    }
+    //流水绑定关系
+    @Bean
+    public Binding firstBillBinding() {
+        return BindingBuilder.bind(firstBillQueue()).to(firstBillExchange()).with(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY);
+    }
 }
 

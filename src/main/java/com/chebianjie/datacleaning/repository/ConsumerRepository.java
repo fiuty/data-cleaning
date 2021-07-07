@@ -25,7 +25,7 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
 
     int countByRegistryTimeLessThanEqual(LocalDateTime flowConsumerTime);
 
-    @Query(nativeQuery = true,value = "select * from consumer limit :pageNumber, :pageSize")
+    @Query(nativeQuery = true,value = "select * from consumer t,(select id from consumer order by id limit :pageNumber, :pageSize) temp where t.id = temp.id")
     List<Consumer> findAllByPage(@Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
 
 

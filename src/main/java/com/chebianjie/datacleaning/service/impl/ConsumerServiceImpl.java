@@ -259,6 +259,18 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer findByWechatUnionId(String wechatUnionId) {
+        return consumerRepository.findByWechatUnionId(wechatUnionId);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer findByPhone(String phone) {
+        return consumerRepository.findByPhone(phone);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public Consumer findByPhone(String phone) {
         return consumerRepository.findByPhone(phone);
     }

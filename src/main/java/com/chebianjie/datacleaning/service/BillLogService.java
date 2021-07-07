@@ -14,4 +14,9 @@ public interface BillLogService {
     void save(String unionAccount, Integer status);
 
     List<BillLog> findByStatus(Integer status);
+
+    /**
+     * 是否重复清洗
+     */
+    Boolean repeatClean(String unionAccount);
 }

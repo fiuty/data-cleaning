@@ -33,4 +33,8 @@ public interface ConsumerService {
 
     Long findTotalCount();
 
+
+    Consumer findByWechatUnionId(String wechatUnionId);
+
+    Consumer findByPhone(String phone);
 }
