@@ -49,4 +49,9 @@ public class ConsumerLog implements Serializable {
      * 状态 0: 失败 1:成功
      */
     private int status;
+
+    /**
+     * 迁移后consumer表id
+     */
+    private long consumerId;
 }

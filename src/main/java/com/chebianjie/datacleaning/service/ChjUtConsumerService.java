@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface ChjUtConsumerService {
 
+    UtConsumer getUtConsumerById(Long id);
+
     Page<UtConsumer> pageUtConsumer(Pageable pageable);
 
     UtConsumer getUtConsumerByUnionid(String unionid);
@@ -25,4 +27,6 @@ public interface ChjUtConsumerService {
 
 
     UtConsumer getUtConsumerByPhone(String phone);
+
+    List<UtConsumer> listByUnionid(String unionid);
 }

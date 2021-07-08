@@ -12,6 +12,8 @@ public interface ConsumerLogService {
 
     ConsumerLog getOneByChjIdAndStatusAndType(long chjId, int status, int type);
 
+    ConsumerLog getOneByConsumerIdAndStatusAndType(long consumerId, int status, int type);
+
     void saveOne(ConsumerLog consumerLog);
 
     int countByUnionId(String unionid, int type, int status);

@@ -83,6 +83,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
             //判断是否有失败记录, 有则更新 无则插入
             ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer , chjUtConsumer);
             if(curConsumerLog != null) {
+                curConsumerLog.setConsumerId(consumer.getId());
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
             }else{
@@ -98,6 +99,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
                 if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
                     temp.setChjAccount(chjUtConsumer.getAccount());
                 }
+                temp.setConsumerId(consumer.getId());
                 temp.setType(1);
                 temp.setStatus(1);
                 consumerLogRepository.save(temp);
@@ -226,12 +228,6 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public Consumer findByWechatUnionId(String wechatUnionId) {
         return consumerRepository.findByWechatUnionId(wechatUnionId);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    public Consumer findByPhone(String phone) {
-        return consumerRepository.findByPhone(phone);
     }
 
     @Override

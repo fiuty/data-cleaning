@@ -35,7 +35,7 @@ public class AbstractBaseServiceImpl {
             }
         }else {
             //3. 两者不为空, 对比注册时间, 以较早注册的为主
-            if(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()) {
+            if(cbjUtConsumer.getLastlogintime() > chjUtConsumer.getLastlogintime()) {
                 rst = consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjUtConsumer.getId(), 0, 1);
             }else{
                 rst = consumerLogRepository.findOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 0, 1);
@@ -58,12 +58,10 @@ public class AbstractBaseServiceImpl {
             }
         }else {
             //3. 两者不为空, 对比注册时间, 以较早注册的为主
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) && StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                if (cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()){
-                    rst = cbjUtConsumer.getUnionid();
-                }else{
-                    rst = chjUtConsumer.getUnionid();
-                }
+            if (cbjUtConsumer.getLastlogintime() > chjUtConsumer.getLastlogintime() && StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
+                rst = cbjUtConsumer.getUnionid();
+            }else if(chjUtConsumer.getLastlogintime() > cbjUtConsumer.getLastlogintime() && StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
+                rst = chjUtConsumer.getUnionid();
             }
         }
         return rst;

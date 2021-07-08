@@ -22,15 +22,14 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class ConsumerCouponController extends AbstractBaseController {
 
-    @GetMapping("/synch-cbj")
+    @GetMapping("/sync-cbj")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object synchCbjCoupon() {
+    public Object syncCbjCoupon(@RequestParam("page") int page) {
         long start = System.currentTimeMillis();
         //创建线程
         final ExecutorService es = Executors.newFixedThreadPool(50);
         //同步开始
         int totalPages;
-        int page = 0;
         int size = 1000;
         Page<UtCouponUser> utCouponUserPage;
         do {
@@ -42,6 +41,7 @@ public class ConsumerCouponController extends AbstractBaseController {
             //2.处理数据
             for (int i = 1; i <= utCouponUserList.size(); i++) {
                 UtCouponUser utCouponUser = utCouponUserList.get(i - 1);
+                log.info(utCouponUser.getId() + "");
                 //3.线上utCouponUser存在consumer_account为null数据,因此判断只用consumer_id
                 if (!checkCleanCoupon(utCouponUser, 1)) {
                     //4.获取当前关联utConsumer搬迁日志(consumerLog)
@@ -77,15 +77,15 @@ public class ConsumerCouponController extends AbstractBaseController {
         return "finish: [" + (System.currentTimeMillis() - start) + "]";
     }
 
-    @GetMapping("/synch-chj")
+    @GetMapping("/sync-chj")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object synchChjCoupon() {
+    public Object syncChjCoupon() {
         long start = System.currentTimeMillis();
         //创建线程
         final ExecutorService es = Executors.newFixedThreadPool(50);
         //同步开始
         int totalPages;
-        int page = 3;
+        int page = 0;
         int size = 1000;
         Page<UtCouponUser> utCouponUserPage;
         do {
@@ -100,7 +100,7 @@ public class ConsumerCouponController extends AbstractBaseController {
                 //3.线上utCouponUser存在consumer_account为null数据,因此判断只用consumer_id
                 if (!checkCleanCoupon(utCouponUser, 2)) {
                     //4.获取当前关联utConsumer搬迁日志(consumerLog)
-                    log.info("param: [{}]", utCouponUser.getConsumerId());
+                    //log.info("param: [{}]", utCouponUser.getConsumerId());
                     ConsumerLog curConsumerLog = consumerLogService.getOneByChjIdAndStatusAndType(utCouponUser.getConsumerId(), 1, 1);
                     if (curConsumerLog == null) {
                         ConsumerCouponLog temp = new ConsumerCouponLog();
@@ -133,9 +133,9 @@ public class ConsumerCouponController extends AbstractBaseController {
         return "finish: [" + (System.currentTimeMillis() - start) + "]";
     }
 
-    @GetMapping("/synch-single")
+    @GetMapping("/sync-single")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object synchSingleCoupon(@RequestParam("id") long id, @RequestParam("type") int type) {
+    public Object syncSingleCoupon(@RequestParam("id") long id, @RequestParam("type") int type) {
         //2.处理数据
         UtCouponUser utCouponUser = type == 1 ? utCouponUserService.getCbjOneById(id) : utCouponUserService.getChjOneById(id);
         //3.线上utCouponUser存在consumer_account为null数据,因此判断只用consumer_id

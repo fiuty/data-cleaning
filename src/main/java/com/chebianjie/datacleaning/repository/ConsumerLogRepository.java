@@ -17,6 +17,8 @@ public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>,
 
     ConsumerLog findOneByChjIdAndStatusAndType(long chjId, int status, int type);
 
+    ConsumerLog findOneByConsumerIdAndStatusAndType(long consumerId, int status, int type);
+
     int countByUnionidAndTypeAndStatus(String unionid, int type , int status);
 
     int countByCbjAccountAndTypeAndStatus(String cbjAccount, int type, int status);

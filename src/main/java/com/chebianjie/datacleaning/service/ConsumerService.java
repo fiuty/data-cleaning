@@ -27,12 +27,7 @@ public interface ConsumerService {
 
     Consumer getByConsumerLog(ConsumerLog consumerLog);
 
-
-    Consumer findByPhone(String phone);
-
-
     Long findTotalCount();
-
 
     Consumer findByWechatUnionId(String wechatUnionId);
 

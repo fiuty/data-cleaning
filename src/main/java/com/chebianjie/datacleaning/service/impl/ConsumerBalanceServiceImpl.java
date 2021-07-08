@@ -36,11 +36,10 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public void merge(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
+    public void mergeByConsumer(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
         try {
             ConsumerBalance consumerRealBalance;
             ConsumerBalance consumerGiveBalance;
-            Consumer consumer = getConsumer(cbjUtConsumer, chjUtConsumer);
             if (chjUtConsumer == null && cbjUtConsumer != null) {
                 //1. 车惠捷数据null 以车便捷数据入库
                 consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, cbjUtConsumer, null);
@@ -59,13 +58,12 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
             //判断是否有失败记录, 有则更新 无则插入
             ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer, chjUtConsumer);
             if(curConsumerLog != null) {
+                curConsumerLog.setConsumerId(consumer.getId());
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
             }else{
                 ConsumerLog temp = new ConsumerLog();
-                if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
-                    temp.setUnionid(cbjUtConsumer.getUnionid());
-                }
+                temp.setUnionid(fixConsumerLogUnionid(cbjUtConsumer, chjUtConsumer));
                 temp.setCbjId(cbjUtConsumer.getId());
                 if (chjUtConsumer != null) {
                     temp.setChjId(chjUtConsumer.getId());
@@ -76,6 +74,7 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
                 if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
                     temp.setChjAccount(chjUtConsumer.getAccount());
                 }
+                temp.setConsumerId(consumer.getId());
                 temp.setType(2);
                 temp.setStatus(1);
                 consumerLogRepository.save(temp);
@@ -105,98 +104,20 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public void mergeByConsumer(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
-        try {
-            ConsumerBalance consumerRealBalance;
-            ConsumerBalance consumerGiveBalance;
-            if (chjUtConsumer == null && cbjUtConsumer != null) {
-                //1. 车惠捷数据null 以车便捷数据入库
-                consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, cbjUtConsumer, null);
-                consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, cbjUtConsumer, null);
-            }else if(chjUtConsumer != null && cbjUtConsumer == null){
-                consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, null, chjUtConsumer);
-                consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, null, chjUtConsumer);
-            }else {
-                //2. 两者不为空, 对比注册时间, 以较早注册的为主
-                consumerRealBalance = transConsumerBalance(consumer, BalanceType.REAL_BALANCE, cbjUtConsumer, chjUtConsumer);
-                consumerGiveBalance = transConsumerBalance(consumer, BalanceType.GIVE_BALANCE, cbjUtConsumer, chjUtConsumer);
-            }
-            consumerBalanceRepository.save(consumerRealBalance);
-            consumerBalanceRepository.save(consumerGiveBalance);
-            //3.迁移成功记录日志
-            //判断是否有失败记录, 有则更新 无则插入
-            ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer, chjUtConsumer);
-            if(curConsumerLog != null) {
-                curConsumerLog.setStatus(1);
-                consumerLogRepository.save(curConsumerLog);
-            }else{
-                ConsumerLog temp = new ConsumerLog();
-                temp.setUnionid(fixConsumerLogUnionid(cbjUtConsumer, chjUtConsumer));
-                temp.setCbjId(cbjUtConsumer.getId());
-                if (chjUtConsumer != null) {
-                    temp.setChjId(chjUtConsumer.getId());
-                }
-                if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
-                    temp.setCbjAccount(cbjUtConsumer.getAccount());
-                }
-                if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
-                    temp.setChjAccount(chjUtConsumer.getAccount());
-                }
-                temp.setType(2);
-                temp.setStatus(1);
-                consumerLogRepository.save(temp);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            //4. 有任何报错记录log 失败
-            ConsumerLog temp = new ConsumerLog();
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                temp.setUnionid(cbjUtConsumer.getUnionid());
-            }
-            temp.setCbjId(cbjUtConsumer.getId());
-            if(chjUtConsumer != null){
-                temp.setChjId(chjUtConsumer.getId());
-            }
-            if(StrUtil.isNotBlank(cbjUtConsumer.getAccount())){
-                temp.setCbjAccount(cbjUtConsumer.getAccount());
-            }
-            if(chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())){
-                temp.setChjAccount(chjUtConsumer.getAccount());
-            }
-            temp.setType(2);
-            temp.setStatus(0);
-            consumerLogRepository.save(temp);
-        }
+    public List<ConsumerBalance> findByUnionAccount(String unionAccount) {
+        return consumerBalanceRepository.findByUnionAccount(unionAccount);
     }
 
-    /**
-     * 根据入参获取以迁移新用户信息
-     * @param cbjUtConsumer
-     * @param chjUtConsumer
-     * @return
-     */
-    private Consumer getConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
-        Consumer rst;
-        if (chjUtConsumer == null && cbjUtConsumer != null) {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                rst = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
-            }else{
-                rst = consumerRepository.findByPhone(cbjUtConsumer.getAccount());
-            }
-        }else if(chjUtConsumer != null && cbjUtConsumer == null){
-            if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerRepository.findByWechatUnionId(chjUtConsumer.getUnionid());
-            }else{
-                rst = consumerRepository.findByPhone(chjUtConsumer.getAccount());
-            }
-        }else {
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid()) || StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-                rst = consumerRepository.findByWechatUnionId(cbjUtConsumer.getUnionid());
-            }else{
-                rst = consumerRepository.findByPhone(cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime() ? cbjUtConsumer.getAccount() : chjUtConsumer.getAccount());
-            }
-        }
-        return rst;
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerBalance getByConsumerIdAndBalanceType(long consumerId, BalanceType balanceType) {
+        return consumerBalanceRepository.findOneByConsumerIdAndBalanceType(consumerId, balanceType);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void save(ConsumerBalance consumerBalance) {
+        consumerBalanceRepository.save(consumerBalance);
     }
 
     /**
@@ -242,11 +163,5 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
                 break;
         }
         return rst;
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    public List<ConsumerBalance> findByUnionAccount(String unionAccount) {
-        return consumerBalanceRepository.findByUnionAccount(unionAccount);
     }
 }
