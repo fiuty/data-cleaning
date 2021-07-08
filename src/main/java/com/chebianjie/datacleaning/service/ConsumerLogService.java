@@ -25,4 +25,6 @@ public interface ConsumerLogService {
     ConsumerLog findOneByCbjAccountAndStatusAndType(String phone, int status, int type);
 
     ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type);
+
+    ConsumerLog findOneByConsumerId(Long id,Integer type);
 }

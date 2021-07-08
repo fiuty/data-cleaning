@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * @author zhengdayue
  * @date: 2021-07-07
@@ -26,4 +28,12 @@ public class ConsumerBillDetailSaveServiceImpl implements ConsumerBillDetailSave
     public void save(ConsumerBillChangeDetail consumerBillChangeDetail) {
         consumerBillChangeDetailRepository.save(consumerBillChangeDetail);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<ConsumerBillChangeDetail> findByBillIdentify(String billIdentify) {
+        return consumerBillChangeDetailRepository.findAllByBillIdentify(billIdentify);
+    }
+
 }

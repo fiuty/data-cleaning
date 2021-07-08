@@ -82,4 +82,11 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
     public ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type) {
         return consumerLogRepository.findOneByChjAccountAndStatusAndType(phone, status, type);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog findOneByConsumerId(Long id,Integer type) {
+        return consumerLogRepository.findOneByConsumerIdAndType(id,type);
+    }
+
 }

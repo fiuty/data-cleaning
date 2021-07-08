@@ -80,6 +80,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Autowired
     private ConsumerBillDetailSaveService consumerBillDetailSaveService;
 
+    @Autowired
+    private DataSynTimeService dataSynTimeService;
+
+    @Autowired
+    private FlowLogService flowLogService;
+
     @Override
     public void cleanOne(int pageNumber, int pageSize) {
         List<Consumer> consumers = consumerService.findAllByPage(pageNumber * pageSize, pageSize);
@@ -110,15 +116,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 channel.basicAck(tag, false);
                 return;
             }
-            ConsumerLog consumerLog = null;
-            if (consumer.getWechatUnionId() != null) {
-                consumerLog = consumerLogService.findOneByUnionidAndStatusAndType(consumer.getWechatUnionId(), 1, 1);
-            } else {
-                consumerLog = consumerLogService.findOneByCbjAccountAndStatusAndType(consumer.getPhone(), 1, 1);
-                if (consumerLog == null) {
-                    consumerLog = consumerLogService.findOneByChjAccountAndStatusAndType(consumer.getPhone(), 1, 1);
-                }
-            }
+            ConsumerLog consumerLog = consumerLogService.findOneByConsumerId(consumer.getId(),1);
             if (consumerLog == null) {
                 log.error("用户查询不到迁移log,consumerId:{}", consumer.getId());
                 billLogService.save(consumer.getUnionAccount(), 0);
@@ -174,6 +172,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 //清洗流水
                 ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
                 handleBillDetail(consumerBill, currentFlow);
+                flowLogService.save(currentFlow.getId(), consumerBill.getPlatform(), 1);
             }
             billLogService.save(consumer.getUnionAccount(), 1);
             flows = null;
@@ -217,7 +216,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     }
 
     //余额流水,金额变动
-    private Boolean isBalanceChange(ConsumerBill consumerBill) {
+    public Boolean isBalanceChange(ConsumerBill consumerBill) {
         BillType billType = consumerBill.getBillType();
         //普通洗车
         if (billType == BillType.WASH) {
@@ -234,7 +233,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         }
     }
 
-    private ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
+    public ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
         ConsumerBillChangeDetail detail = new ConsumerBillChangeDetail();
         detail.setBillIdentify(billIdentify);
         detail.setPreChangeValue(NumberUtil.addIfNull(afterChangeValue, NumberUtil.negativeIfNull(changeValue)));
@@ -548,5 +547,8 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         //同步完发到消息队列
         UtUserTotalFlow message = new UtUserTotalFlow();
         rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message);
+
+        dataSynTime.setLastTime(timeTo);
+        dataSynTimeService.updateDataSynTime(dataSynTime);
     }
 }

@@ -16,4 +16,5 @@ public interface ConsumerBillChangeDetailRepository extends JpaRepository<Consum
 
     void deleteAllByBillIdentifyIn(List<String> billIdentifies);
 
+    List<ConsumerBillChangeDetail> findAllByBillIdentify(String billIdentify);
 }
