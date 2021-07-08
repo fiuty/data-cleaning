@@ -37,4 +37,10 @@ public class BillLogServiceImpl implements BillLogService {
     public List<BillLog> findByStatus(Integer status) {
          return billLogRepository.findAllByStatus(status);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Boolean repeatClean(String unionAccount) {
+        return billLogRepository.findByUnionAccountAndStatus(unionAccount, 1) != null;
+    }
 }

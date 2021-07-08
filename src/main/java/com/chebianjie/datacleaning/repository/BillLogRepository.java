@@ -14,4 +14,6 @@ public interface BillLogRepository extends JpaRepository<BillLog, Long>, JpaSpec
 
     List<BillLog> findAllByStatus(Integer status);
 
+    BillLog findByUnionAccountAndStatus(String unionAccount, int status);
+
 }

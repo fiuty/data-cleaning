@@ -6,31 +6,35 @@ import lombok.Data;
 import javax.persistence.*;
 
 /**
+ * 监听流水增量log
  * @author zhengdayue
- * @date: 2021-07-05
+ * @date: 2021-07-06
  */
-@Data
-@Entity
 @Table
-public class UtUserTotalFlowLog {
+@Entity
+@Data
+public class AddBillLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
-     * 监听流水json
+     * 旧流水id
      */
-    private String json;
+    private Long utUserTotalFlowId;
 
-    /**
-     * 平台
-     */
+    @Enumerated(EnumType.STRING)
     private Platform platform;
 
     /**
-     * 流水id
+     * 0-失败、1-成功
      */
-    private Long UtUserTotalFlowId;
+    private Integer status;
+
+    /**
+     * 流水json,失败保存json
+     */
+    private String json;
 
 }
