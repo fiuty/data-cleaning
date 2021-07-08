@@ -1,6 +1,7 @@
 package com.chebianjie.datacleaning.service.impl;
 
 import com.chebianjie.common.core.util.CollectUtil;
+import com.chebianjie.common.core.util.DateUtil;
 import com.chebianjie.common.core.util.NumberUtil;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
@@ -543,12 +544,38 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(1);
         LocalDateTime timeFrom = dataSynTime.getLastTime();
         LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
+        int pageSize = 1000;
+        //车便捷分页
+        int cbjTotal = utUserTotalFlowService.cbjCountByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo));
+        int cbjTotalPage = computeTotalPage(cbjTotal);
+        for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
+            List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo), pageNumber, pageSize);
+            cbjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+        }
 
-        //同步完发到消息队列
-        UtUserTotalFlow message = new UtUserTotalFlow();
-        rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message);
-
+        //车惠捷分页
+        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo));
+        int chjTotalPage = computeTotalPage(chjTotal);
+        for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
+            List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo), pageNumber, pageSize);
+            chjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+        }
         dataSynTime.setLastTime(timeTo);
         dataSynTimeService.updateDataSynTime(dataSynTime);
+        log.info("同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
+    }
+
+    private Long toEpochMilli(LocalDateTime localDateTime) {
+        return localDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli();
+    }
+
+    private int computeTotalPage(long total) {
+        int pageSize = 1000;
+        int totalPage = (int)total / pageSize;
+        long mod = total % pageSize;
+        if (mod != 0) {
+            ++totalPage;
+        }
+        return totalPage;
     }
 }

@@ -14,5 +14,14 @@ public interface UtUserTotalFlowService {
 
     List<UtUserTotalFlow> chjFindAllByUid(Long cbjId);
 
+    int cbjCountByCreateTimeBetween(Long timeFrom, Long timeTo);
+
+    int chjCountByCreateTimeBetween(Long timeFrom, Long timeTo);
+
+    List<UtUserTotalFlow> cbjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize);
+
+    List<UtUserTotalFlow> chjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize);
+
+
 
 }

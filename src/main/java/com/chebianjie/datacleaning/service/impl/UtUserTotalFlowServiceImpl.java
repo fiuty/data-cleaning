@@ -34,4 +34,28 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
     public List<UtUserTotalFlow> chjFindAllByUid(Long chjId) {
         return utUserTotalFlowRepository.findAllByUid(chjId);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public List<UtUserTotalFlow> cbjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
+        return utUserTotalFlowRepository.findAllByCreateTimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public List<UtUserTotalFlow> chjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
+        return utUserTotalFlowRepository.findAllByCreateTimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public int cbjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
+        return utUserTotalFlowRepository.countByCreateTimeBetween(timeFrom, timeTo);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public int chjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
+        return utUserTotalFlowRepository.countByCreateTimeBetween(timeFrom, timeTo);
+    }
 }

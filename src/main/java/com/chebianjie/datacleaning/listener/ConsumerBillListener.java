@@ -79,7 +79,6 @@ public class ConsumerBillListener {
                 channel.basicAck(tag, false);
                 return;
             }
-
             //判断第一笔流水重复
             Boolean repeatClean = addBillLogService.repeatClean(message.getId(), message.getPlatform());
             if (Objects.equals(repeatClean, true)) {
