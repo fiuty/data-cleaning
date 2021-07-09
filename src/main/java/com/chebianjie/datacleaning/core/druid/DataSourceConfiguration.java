@@ -91,11 +91,25 @@ public class DataSourceConfiguration {
     }
 
 
+    /**
+     * 车便捷staff
+     */
+    @Bean
+    @ConditionalOnProperty( prefix = "spring.datasource.druid.cbjstaff", name = "enable", havingValue = "true")//是否开启数据源开关---若不开启 默认适用默认数据源
+    @ConfigurationProperties("spring.datasource.druid.cbjstaff")
+    public DataSource cbjStaffDataSource(DataSourceProperties dataSourceProperties) {
+        return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
+    }
 
-
-
-
-
+    /**
+     * 车惠捷staff
+     */
+    @Bean
+    @ConditionalOnProperty( prefix = "spring.datasource.druid.chjstaff", name = "enable", havingValue = "true")//是否开启数据源开关---若不开启 默认适用默认数据源
+    @ConfigurationProperties("spring.datasource.druid.chjstaff")
+    public DataSource chjStaffDataSource(DataSourceProperties dataSourceProperties) {
+        return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
+    }
 
 
     /**
@@ -104,7 +118,8 @@ public class DataSourceConfiguration {
     @Bean(name = "dynamicDataSource")
     @Primary
     public DynamicDataSource dynamicDataSource(DataSource masterDataSource, DataSource slaveDataSource, DataSource userPlatformDataSource,
-                                               DataSource cbjOrderDataSource, DataSource chjOrderDataSource,DataSource cbjCouponDataSource,DataSource chjCouponDataSource) {
+                                               DataSource cbjOrderDataSource, DataSource chjOrderDataSource, DataSource cbjCouponDataSource,
+                                               DataSource chjCouponDataSource, DataSource cbjStaffDataSource, DataSource chjStaffDataSource) {
         Map<Object, Object> targetDataSources = new HashMap<>();
         DynamicDataSource dynamicDataSource = DynamicDataSource.build();
         targetDataSources.put(DataSourcesType.MASTER.name(), masterDataSource);
@@ -114,6 +129,8 @@ public class DataSourceConfiguration {
         targetDataSources.put(DataSourcesType.CHJ_ORDER.name(), chjOrderDataSource);
         targetDataSources.put(DataSourcesType.CBJ_COUPON.name(), cbjCouponDataSource);
         targetDataSources.put(DataSourcesType.CHJ_COUPON.name(), chjCouponDataSource);
+        targetDataSources.put(DataSourcesType.CBJ_STAFF.name(), cbjStaffDataSource);
+        targetDataSources.put(DataSourcesType.CHJ_STAFF.name(), chjStaffDataSource);
         //默认数据源配置 DefaultTargetDataSource
         dynamicDataSource.setDefaultTargetDataSource(masterDataSource);
         //额外数据源配置 TargetDataSources

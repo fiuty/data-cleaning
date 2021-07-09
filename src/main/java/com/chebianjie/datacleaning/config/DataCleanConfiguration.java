@@ -27,6 +27,16 @@ public class DataCleanConfiguration {
      */
     private int flwoConsumerStartPage;
 
+    /**
+     * 员工业绩清洗时间节点
+     */
+    private Long staffLogTime;
+
+    /**
+     * 流水业绩分页点
+     */
+    private int staffLogStartPage;
+
     public LocalDateTime getFlowConsumerTime() {
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.parse(flowConsumerTime, df);

@@ -140,5 +140,21 @@ public class RabbitmqConfig {
     public Binding firstBillBinding() {
         return BindingBuilder.bind(firstBillQueue()).to(firstBillExchange()).with(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY);
     }
+
+    //员工业绩
+    @Bean
+    public Queue firstStaffLogQueue() {
+        return new Queue(RabbitMqConstants.DATA_CLEAN_FIRST_STAFF_LOG_QUEUE, true);
+    }
+
+    @Bean
+    public DirectExchange firstStaffLogExchange() {
+        return new DirectExchange(RabbitMqConstants.DATA_CLEAN_FIRST_STAFF_LOG_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public Binding firstStaffLogBinding() {
+        return BindingBuilder.bind(firstStaffLogQueue()).to(firstStaffLogExchange()).with(RabbitMqConstants.DATA_CLEAN_FIRST_STAFF_LOG_ROUTING_KEY);
+    }
 }
 

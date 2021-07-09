@@ -1,6 +1,7 @@
 package com.chebianjie.datacleaning.service;
 
 import com.chebianjie.datacleaning.domain.ConsumerLog;
+import com.chebianjie.datacleaning.domain.enums.Platform;
 
 public interface ConsumerLogService {
 
@@ -29,4 +30,6 @@ public interface ConsumerLogService {
     int countByUnionId(String unionid, int type, int status);
 
     int countByCbjAccount(String cbjAccount, int type, int status);
+
+    ConsumerLog findOneByCbjIdOrChjId(Long id, Platform platform);
 }

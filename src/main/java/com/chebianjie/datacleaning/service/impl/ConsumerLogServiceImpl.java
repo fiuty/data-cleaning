@@ -3,6 +3,7 @@ package com.chebianjie.datacleaning.service.impl;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
+import com.chebianjie.datacleaning.domain.enums.Platform;
 import com.chebianjie.datacleaning.repository.ConsumerLogRepository;
 import com.chebianjie.datacleaning.service.ConsumerLogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,4 +96,13 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
         return consumerLogRepository.findOneByConsumerIdAndType(id,type);
     }
 
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog findOneByCbjIdOrChjId(Long id, Platform platform) {
+        if (platform == Platform.CHEHUIJIE) {
+            return consumerLogRepository.findOneByChjIdAndStatusAndType(id, 1, 1);
+        } else {
+            return consumerLogRepository.findOneByCbjIdAndStatusAndType(id, 1, 1);
+        }
+    }
 }

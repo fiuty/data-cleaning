@@ -37,6 +37,16 @@ public enum DataSourcesType {
     /**
      *车惠捷coupon
      */
-    CHJ_COUPON;
+    CHJ_COUPON,
+
+    /**
+     * 车便捷staff
+     */
+    CBJ_STAFF,
+
+    /**
+     * 车惠捷staff
+     */
+    CHJ_STAFF;
 
 }
