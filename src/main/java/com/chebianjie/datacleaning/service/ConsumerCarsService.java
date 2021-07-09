@@ -27,7 +27,7 @@ public interface ConsumerCarsService {
 
     public List<UtUserCars> getChjUtUserCarsByUid(Long Uid);
 
-    public void  saveConsumerCars(UtUserCars utUserCars, String phone, String unionAccount,String unionId, Platform platform);
+    public void  saveConsumerCars(UtUserCars utUserCars,Long consumerId, String phone, String unionAccount,String unionId, Platform platform);
 
     //车便捷
     public UtConsumer getCbjUtConsumerById(Long Uid);

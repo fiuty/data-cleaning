@@ -53,6 +53,12 @@ public class ConsumerCarsLog {
 
 
     /**
+     * 车详情id
+     */
+    private Long carDetailId;
+
+
+    /**
      * userplatform-consumer-消费者唯一账号
      */
     private String unionAccount;

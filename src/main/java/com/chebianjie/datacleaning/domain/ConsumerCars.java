@@ -210,6 +210,13 @@ public class ConsumerCars {
     private String unionAccount;
 
 
+    /**
+     * 汽车品牌详情id
+     */
+    @Column(name = "car_detail_id")
+    private Long carDetailId;
+
+
 
 
 }

@@ -205,6 +205,7 @@ public class UtUserCars {
     /**
      * 汽车品牌详情id
      */
+    @Column(name = "car_detail_id")
     private Long carDetailId;
 
 

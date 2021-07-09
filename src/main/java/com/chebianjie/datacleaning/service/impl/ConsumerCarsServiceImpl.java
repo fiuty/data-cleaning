@@ -67,7 +67,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public void  saveConsumerCars(UtUserCars userCars,String phone,String unionAccount,String unionId,Platform platform){
+    public void  saveConsumerCars(UtUserCars userCars,Long consumerId,String phone,String unionAccount,String unionId,Platform platform){
         try {
 
         ConsumerCars consumerCars;
@@ -75,6 +75,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
 
             consumerCars = toConsumerCars(userCars, platform);
             consumerCars.setUnionAccount(unionAccount);
+            consumerCars.setConsumerId(consumerId);
             consumerCarsRepository.save(consumerCars);
 
             //记录成功日志
@@ -87,6 +88,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
             consumerCarsLog.setStatus(1);
             consumerCarsLog.setPlatform(platform);
             consumerCarsLog.setCreatTime(LocalDateTime.now());
+            consumerCarsLog.setCarDetailId(userCars.getCarDetailId());
             consumerCarsLogRepository.save(consumerCarsLog);
         }
 
@@ -100,6 +102,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
             consumerCarsLog.setStatus(0);
             consumerCarsLog.setPlatform(platform);
             consumerCarsLog.setCreatTime(LocalDateTime.now());
+            consumerCarsLog.setCarDetailId(userCars.getCarDetailId());
             consumerCarsLogRepository.save(consumerCarsLog);
 
         }
@@ -140,7 +143,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
 
     public ConsumerCars toConsumerCars(UtUserCars item,Platform platform){
         ConsumerCars car=new ConsumerCars();
-        car.setConsumerId(item.getUid());
+        //car.setConsumerId(item.getUid());
         car.setBrand(item.getBrand());
         car.setBrandId(item.getBrandId());
         car.setCarSystem(item.getCarSystem());
@@ -171,6 +174,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
         car.setCarType(item.getCarType());
         car.setAccidentType(item.getAccidentType());
         car.setPlatform(platform);
+        car.setCarDetailId(item.getCarDetailId());
         //car.setUnionAccount(item.getUnionAccount());  //消费者唯一账号
 
         return car;
