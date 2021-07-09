@@ -1,8 +1,14 @@
 package com.chebianjie.datacleaning.domain;
 
 import lombok.Data;
+import org.hibernate.engine.internal.Cascade;
+
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "consumer_log")

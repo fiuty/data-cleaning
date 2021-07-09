@@ -41,7 +41,6 @@ public class ConsumerCouponController extends AbstractBaseController {
             //2.处理数据
             for (int i = 1; i <= utCouponUserList.size(); i++) {
                 UtCouponUser utCouponUser = utCouponUserList.get(i - 1);
-                log.info(utCouponUser.getId() + "");
                 //3.线上utCouponUser存在consumer_account为null数据,因此判断只用consumer_id
                 if (!checkCleanCoupon(utCouponUser, 1)) {
                     //4.获取当前关联utConsumer搬迁日志(consumerLog)

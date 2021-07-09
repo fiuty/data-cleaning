@@ -8,13 +8,14 @@ import java.util.List;
 
 public interface CbjUtConsumerService {
 
-    Page<UtConsumer> pageUtConsumer(Pageable pageable);
-
     UtConsumer getUtConsumerById(Long id);
 
-    List<UtConsumer> listByUnionid(String unionid);
-
-
     UtConsumer getUtConsumerByPhone(String phone);
+
+    List<UtConsumer> getUtConsumerListByUnionid(String unionid);
+
+    List<UtConsumer> getUtConsumerListByAccount(String account);
+
+    Page<UtConsumer> pageUtConsumer(Pageable pageable);
 
 }

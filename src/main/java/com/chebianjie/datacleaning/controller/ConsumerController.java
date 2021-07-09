@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -48,12 +50,12 @@ public class ConsumerController extends AbstractBaseController{
             //2.开始遍历
             for(int i = 1; i <= utConsumerList.size(); i++){
                 UtConsumer curCbjUtConsumer = utConsumerList.get(i-1);
-                //3.针对存在同一unionid多条数据需提前合并
-                curCbjUtConsumer = fixUtConsumer(curCbjUtConsumer, 1);
+                //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                curCbjUtConsumer = fixUtConsumerByAccount(curCbjUtConsumer, 1);
                 //4.获取与当前车便捷用户对应的车惠捷用户
                 UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
                 //5.检查是否已经清洗
-                if(!checkCleanConsumer(curCbjUtConsumer, chjUtConsumer)){
+                if(!checkCleanConsumer(curCbjUtConsumer, 1)){
                     //6.处理数据
                     es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
                 }
@@ -89,12 +91,12 @@ public class ConsumerController extends AbstractBaseController{
             //2.开始遍历
             for(int i = 1; i <= utConsumerList.size(); i++){
                 UtConsumer curChjUtConsumer = utConsumerList.get(i-1);
-                //3.针对存在同一unionid多条数据需提前合并
-                curChjUtConsumer = fixUtConsumer(curChjUtConsumer, 2);
+                //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
                 //4.获取与当前车便捷用户对应的车惠捷用户
                 UtConsumer cbjUtConsumer = getCbjUtConsumerByChjUtConsumer(curChjUtConsumer);
                 //5.检查是否已经清洗
-                if(!checkCleanConsumer(cbjUtConsumer, curChjUtConsumer)){
+                if(!checkCleanConsumer(curChjUtConsumer, 2)){
                     //6.处理数据
                     es.submit(new ConsumerTask(consumerService, consumerBalanceService, cbjUtConsumer, curChjUtConsumer));
                 }else{
@@ -111,18 +113,22 @@ public class ConsumerController extends AbstractBaseController{
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Object testSynch(@RequestParam("id") long id, @RequestParam("type") int type){
         //1.获取车便捷用户
-        UtConsumer curCbjUtConsumer = cbjUtConsumerService.getUtConsumerById(id);
-        //3.针对存在同一unionid多条数据需提前合并
-        curCbjUtConsumer = fixUtConsumer(curCbjUtConsumer, type);
-        //4.获取与当前车便捷用户对应的车惠捷用户
-        UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
+        UtConsumer utConsumer =  type == 1 ? cbjUtConsumerService.getUtConsumerById(id) : chjUtConsumerService.getUtConsumerById(id);
+        //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+        utConsumer = fixUtConsumerByAccount(utConsumer, type);
+        //4.获取与当前用户数据对应的另一用户数据
+        UtConsumer fixUtConsumer = type == 1 ? getChjUtConsumerByCbjUtConsumer(utConsumer) : getCbjUtConsumerByChjUtConsumer(utConsumer);
         //5.检查是否已经清洗
-        if(!checkCleanConsumer(curCbjUtConsumer, chjUtConsumer)){
+        if(!checkCleanConsumer(utConsumer, type)){
             //3.处理数据
-            Consumer consumer = consumerService.mergeConsumer(curCbjUtConsumer, chjUtConsumer);
+            Consumer consumer = type == 1 ? consumerService.mergeConsumer(utConsumer, fixUtConsumer) : consumerService.mergeConsumer(fixUtConsumer, utConsumer);
             if(consumer != null){
                 //迁移用户余额
-                consumerBalanceService.mergeByConsumer(consumer, curCbjUtConsumer, chjUtConsumer);
+                if(type == 1){
+                    consumerBalanceService.mergeByConsumer(consumer, utConsumer, fixUtConsumer);
+                }else if (type == 2){
+                    consumerBalanceService.mergeByConsumer(consumer, fixUtConsumer, utConsumer);
+                }
             }
         }else{
             return "exist";

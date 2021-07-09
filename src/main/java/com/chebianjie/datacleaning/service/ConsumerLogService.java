@@ -4,21 +4,17 @@ import com.chebianjie.datacleaning.domain.ConsumerLog;
 
 public interface ConsumerLogService {
 
-    ConsumerLog getOneByUnionId(String unionid, int type, int status);
+    ConsumerLog getOneByUnionIdAndStatusAndType(String unionid, int status, int type);
 
-    ConsumerLog getOneByCbjAccount(String cbjAccount, int type, int status);
+    ConsumerLog getOneByCbjAccountAndStatusAntType(String cbjAccount, int status, int type);
 
     ConsumerLog getOneByCbjIdAndStatusAndType(long cbjId, int status, int type);
+
+    ConsumerLog getOneByChjAccountAndStatusAndType(String chjAccount, int status, int type);
 
     ConsumerLog getOneByChjIdAndStatusAndType(long chjId, int status, int type);
 
     ConsumerLog getOneByConsumerIdAndStatusAndType(long consumerId, int status, int type);
-
-    void saveOne(ConsumerLog consumerLog);
-
-    int countByUnionId(String unionid, int type, int status);
-
-    int countByCbjAccount(String cbjAccount, int type, int status);
 
     ConsumerLog findOneByUnionidAndStatusAndType(String unionid, int status, int type);
 
@@ -27,4 +23,10 @@ public interface ConsumerLogService {
     ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type);
 
     ConsumerLog findOneByConsumerId(Long id,Integer type);
+
+    void saveOne(ConsumerLog consumerLog);
+
+    int countByUnionId(String unionid, int type, int status);
+
+    int countByCbjAccount(String cbjAccount, int type, int status);
 }

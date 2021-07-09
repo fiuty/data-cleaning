@@ -19,20 +19,26 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public ConsumerLog getOneByUnionId(String unionid, int type, int status) {
-        return consumerLogRepository.findOneByUnionidAndStatusAndType(unionid, type, status);
+    public ConsumerLog getOneByUnionIdAndStatusAndType(String unionid, int status, int type) {
+        return consumerLogRepository.findOneByUnionidAndStatusAndType(unionid, status, type);
     }
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public ConsumerLog getOneByCbjAccount(String cbjAccount, int type, int status) {
-        return consumerLogRepository.findOneByCbjAccountAndStatusAndType(cbjAccount, type, status);
+    public ConsumerLog getOneByCbjAccountAndStatusAntType(String cbjAccount, int status, int type) {
+        return consumerLogRepository.findOneByCbjAccountAndStatusAndType(cbjAccount, status, type);
     }
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public ConsumerLog getOneByCbjIdAndStatusAndType(long cbjId, int status, int type) {
         return consumerLogRepository.findOneByCbjIdAndStatusAndType(cbjId, status, type);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerLog getOneByChjAccountAndStatusAndType(String chjAccount, int status, int type) {
+        return consumerLogRepository.findOneByChjAccountAndStatusAndType(chjAccount, status, type);
     }
 
     @Override

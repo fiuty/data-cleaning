@@ -71,58 +71,29 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
                 //2. 车便捷数据null 以车惠捷数据入库
                 consumer = transConsumer(chjUtConsumer, 2);
             }else {
-                //3. 两者不为空, 对比注册时间, 以较早注册的为主
-                if (cbjUtConsumer.getCreatetime() < chjUtConsumer.getCreatetime()){
+                //3. 两者不为空, 对比最后登陆时间, 以最近的为主
+                if (cbjUtConsumer.getLastlogintime() > chjUtConsumer.getLastlogintime()){
                     consumer = transConsumer(cbjUtConsumer, 1);
                 }else{
                     consumer = transConsumer(chjUtConsumer, 2);
                 }
             }
             consumerRepository.save(consumer);
-            //3.迁移成功记录日志
-            //判断是否有失败记录, 有则更新 无则插入
-            ConsumerLog curConsumerLog = getConsumerLog(cbjUtConsumer , chjUtConsumer);
+            //4.迁移成功记录日志 - 判断是否有失败记录, 有则更新 无则插入
+            ConsumerLog curConsumerLog = getFailConsumerLog(cbjUtConsumer , chjUtConsumer, 1);
             if(curConsumerLog != null) {
                 curConsumerLog.setConsumerId(consumer.getId());
                 curConsumerLog.setStatus(1);
                 consumerLogRepository.save(curConsumerLog);
             }else{
-                ConsumerLog temp = new ConsumerLog();
-                temp.setUnionid(fixConsumerLogUnionid(cbjUtConsumer , chjUtConsumer));
-                temp.setCbjId(cbjUtConsumer.getId());
-                if (chjUtConsumer != null) {
-                    temp.setChjId(chjUtConsumer.getId());
-                }
-                if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
-                    temp.setCbjAccount(cbjUtConsumer.getAccount());
-                }
-                if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {
-                    temp.setChjAccount(chjUtConsumer.getAccount());
-                }
+                ConsumerLog temp = generateConsumerLog(cbjUtConsumer, chjUtConsumer, 1, 1);
                 temp.setConsumerId(consumer.getId());
-                temp.setType(1);
-                temp.setStatus(1);
                 consumerLogRepository.save(temp);
             }
         }catch (Exception e){
             log.error(e.getMessage());
-            //4. 有任何报错记录log 失败
-            ConsumerLog temp = new ConsumerLog();
-            if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-                temp.setUnionid(cbjUtConsumer.getUnionid());
-            }
-            temp.setCbjId(cbjUtConsumer.getId());
-            if(chjUtConsumer != null){
-                temp.setChjId(chjUtConsumer.getId());
-            }
-            if(StrUtil.isNotBlank(cbjUtConsumer.getAccount())){
-                temp.setCbjAccount(cbjUtConsumer.getAccount());
-            }
-            if(chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())){
-                temp.setChjAccount(chjUtConsumer.getAccount());
-            }
-            temp.setType(1);
-            temp.setStatus(0);
+            //5. 有任何报错记录log 失败
+            ConsumerLog temp = generateConsumerLog(cbjUtConsumer, chjUtConsumer, 1, 0);
             consumerLogRepository.save(temp);
         }
         return consumer;
@@ -216,6 +187,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public Consumer getByConsumerLog(ConsumerLog consumerLog) {
         Consumer rst = null;
+        log.info("[consumerLog]: {}", consumerLog.getId());
         if(consumerLog.getUnionid() != null && StrUtil.isNotBlank(consumerLog.getUnionid())){
             rst = consumerRepository.findByWechatUnionId(consumerLog.getUnionid());
         }else if(StrUtil.isNotBlank(consumerLog.getCbjAccount())){

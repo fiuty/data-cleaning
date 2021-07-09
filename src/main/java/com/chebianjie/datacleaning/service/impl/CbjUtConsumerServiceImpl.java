@@ -23,26 +23,31 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
 
     @Override
     @DataSource(name = DataSourcesType.MASTER)
-    public Page<UtConsumer> pageUtConsumer(Pageable pageable) {
-        return utConsumerRepository.findAll(pageable);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.MASTER)
     public UtConsumer getUtConsumerById(Long id) {
         return utConsumerRepository.findById(id).orElse(null);
     }
 
     @Override
     @DataSource(name = DataSourcesType.MASTER)
-    public List<UtConsumer> listByUnionid(String unionid) {
-        return utConsumerRepository.findListByUnionid(unionid);
+    public UtConsumer getUtConsumerByPhone(String phone) {
+        return utConsumerRepository.findByAccount(phone);
     }
 
     @Override
     @DataSource(name = DataSourcesType.MASTER)
-    public UtConsumer getUtConsumerByPhone(String phone) {
-        return utConsumerRepository.findByAccount(phone);
+    public List<UtConsumer> getUtConsumerListByUnionid(String unionid) {
+        return utConsumerRepository.findListByUnionid(unionid);
+    }
+
+    @Override
+    public List<UtConsumer> getUtConsumerListByAccount(String account) {
+        return utConsumerRepository.findListByAccount(account);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public Page<UtConsumer> pageUtConsumer(Pageable pageable) {
+        return utConsumerRepository.findAll(pageable);
     }
 
 

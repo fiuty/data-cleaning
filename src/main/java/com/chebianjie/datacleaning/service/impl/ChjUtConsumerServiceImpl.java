@@ -47,6 +47,12 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
 
     @Override
     @DataSource(name = DataSourcesType.SLAVE)
+    public UtConsumer getUtConsumerByPhone(String phone) {
+        return utConsumerRepository.findByAccount(phone);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
     public List<UtConsumer> getUtConsumerListByAccount(String account) {
         return utConsumerRepository.findListByAccount(account);
     }
@@ -54,18 +60,6 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
     @Override
     @DataSource(name = DataSourcesType.SLAVE)
     public List<UtConsumer> getUtConsumerListByUnionid(String unionid) {
-        return utConsumerRepository.findListByUnionid(unionid);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public UtConsumer getUtConsumerByPhone(String phone) {
-        return utConsumerRepository.findByAccount(phone);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public List<UtConsumer> listByUnionid(String unionid) {
         return utConsumerRepository.findListByUnionid(unionid);
     }
 }

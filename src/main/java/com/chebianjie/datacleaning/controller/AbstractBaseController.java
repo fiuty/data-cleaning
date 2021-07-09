@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractBaseController {
 
@@ -42,17 +43,17 @@ public abstract class AbstractBaseController {
      * @param type 1:车便捷 2:车惠捷
      * @return
      */
-    protected UtConsumer fixUtConsumer(UtConsumer utConsumer, int type){
+        protected UtConsumer fixUtConsumerByAccount(UtConsumer utConsumer, int type){
         if(StrUtil.isNotBlank(utConsumer.getUnionid())) {
             List<UtConsumer> utConsumerList = new ArrayList<>();
             if(type == 1){
-                utConsumerList = cbjUtConsumerService.listByUnionid(utConsumer.getUnionid());
+                utConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(utConsumer.getUnionid());
             }else if(type == 2){
-                utConsumerList = chjUtConsumerService.listByUnionid(utConsumer.getUnionid());
+                utConsumerList = chjUtConsumerService.getUtConsumerListByAccount(utConsumer.getUnionid());
             }
             if(utConsumerList.size() > 1){
                 //整合所有数据
-                utConsumer =  utConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
+                utConsumer =  utConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
                 utConsumer.setBalance(utConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
                 utConsumer.setGiveBalance(utConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
                 utConsumer.setConsumptionAmount(utConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
@@ -65,24 +66,17 @@ public abstract class AbstractBaseController {
     /**
      * 根据车便捷用户获取车惠捷用户
      * @param cbjUtConsumer
-     * @return
+     * @return UtConsumer
      */
     protected UtConsumer getChjUtConsumerByCbjUtConsumer(UtConsumer cbjUtConsumer){
         UtConsumer rst = null;
-        List<UtConsumer> chjUtConsumerListByUnionId = new ArrayList<>();
-        List<UtConsumer> chjUtConsumerListByAccount;
         List<UtConsumer> chjUtConsumerList;
         //ut_consumer表jhi_account非空
-        chjUtConsumerListByAccount = chjUtConsumerService.getUtConsumerListByAccount(cbjUtConsumer.getAccount());
-        if(StrUtil.isNotBlank(cbjUtConsumer.getUnionid())){
-            chjUtConsumerListByUnionId = chjUtConsumerService.getUtConsumerListByUnionid(cbjUtConsumer.getUnionid());
-        }
+        chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(cbjUtConsumer.getAccount());
         //整合list
-        chjUtConsumerListByAccount.addAll(chjUtConsumerListByUnionId);
-        chjUtConsumerList = chjUtConsumerListByAccount;
         if(chjUtConsumerList.size() > 1){
             //整合所有数据
-            rst =  chjUtConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
+            rst = chjUtConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
             rst.setBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
             rst.setGiveBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
             rst.setConsumptionAmount(chjUtConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
@@ -100,55 +94,38 @@ public abstract class AbstractBaseController {
      */
     protected UtConsumer getCbjUtConsumerByChjUtConsumer(UtConsumer chjUtConsumer){
         UtConsumer rst = null;
-        List<UtConsumer> chjUtConsumerListByUnionId = new ArrayList<>();
-        List<UtConsumer> chjUtConsumerListByAccount;
-        List<UtConsumer> chjUtConsumerList;
+        List<UtConsumer> cbjUtConsumerList;
         //ut_consumer表jhi_account非空
-        chjUtConsumerListByAccount = chjUtConsumerService.getUtConsumerListByAccount(chjUtConsumer.getAccount());
-        if(StrUtil.isNotBlank(chjUtConsumer.getUnionid())){
-            chjUtConsumerListByUnionId = chjUtConsumerService.getUtConsumerListByUnionid(chjUtConsumer.getUnionid());
-        }
+        cbjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(chjUtConsumer.getAccount());
         //整合list
-        chjUtConsumerListByAccount.addAll(chjUtConsumerListByUnionId);
-        chjUtConsumerList = chjUtConsumerListByAccount;
-        if(chjUtConsumerList.size() > 1){
+        if(cbjUtConsumerList.size() > 1){
             //整合所有数据
-            rst =  chjUtConsumerList.stream().min(Comparator.comparing(UtConsumer::getCreatetime)).get();
-            rst.setBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
-            rst.setGiveBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
-            rst.setConsumptionAmount(chjUtConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
-            rst.setOrderNum(chjUtConsumerList.stream().filter(e -> e.getOrderNum() != null).mapToLong(UtConsumer::getOrderNum).sum());
-        }else if(chjUtConsumerList.size() == 1){
-            rst = chjUtConsumerList.get(0);
+            rst = cbjUtConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
+            rst.setBalance(cbjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
+            rst.setGiveBalance(cbjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
+            rst.setConsumptionAmount(cbjUtConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
+            rst.setOrderNum(cbjUtConsumerList.stream().filter(e -> e.getOrderNum() != null).mapToLong(UtConsumer::getOrderNum).sum());
+        }else if(cbjUtConsumerList.size() == 1){
+            rst = cbjUtConsumerList.get(0);
         }
         return rst;
     }
 
     /**
      * 检测是否已清洗 - 用户
-     * @param cbjUtConsumer
+     * @param utConsumer
+     * @param type
      * @return false - 未清洗  true - 已清洗
      */
     @Synchronized
-    protected Boolean checkCleanConsumer(UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+    protected Boolean checkCleanConsumer(UtConsumer utConsumer, int type){
         boolean rst = false;
-        if(chjUtConsumer == null) {
-            if (StrUtil.isNotBlank(cbjUtConsumer.getUnionid())) {
-                if (consumerLogService.getOneByUnionId(cbjUtConsumer.getUnionid(), 1, 1) != null) {
-                    rst = true;
-                }
-            } else if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
-                if (consumerLogService.getOneByCbjAccount(cbjUtConsumer.getAccount(), 1, 1) != null) {
-                    rst = true;
-                }
+        if(type == 1) {
+            if (consumerLogService.getOneByCbjAccountAndStatusAntType(utConsumer.getAccount(), 1, 1) != null) {
+                rst = true;
             }
-        }else{
-            ConsumerLog consumerLog = consumerLogService.getOneByChjIdAndStatusAndType(chjUtConsumer.getId(), 1, 1);
-            if(consumerLog != null){
-                //存在多条数据(大于2)指向同一用户,因此做特殊处理
-                if(consumerLog.getCbjId() != null && consumerLog.getChjId() != null){
-                    specialFix(consumerLog, cbjUtConsumer);
-                }
+        }else if(type == 2){
+            if (consumerLogService.getOneByChjAccountAndStatusAndType(utConsumer.getAccount(), 1, 1) != null) {
                 rst = true;
             }
         }
@@ -172,44 +149,49 @@ public abstract class AbstractBaseController {
     }
 
     /**
-     * 存在多条用户数据(大于2)指向同一用户,因此做特殊处理
+     * 存在多条用户数据(大于2)指向同一用户 叠加余额
      * @param consumerLog
      * @param utConsumer
+     * @param type 1:车便捷 2:车惠捷
      */
-    @Transactional(rollbackFor = Exception.class)
-    protected void specialFix(ConsumerLog consumerLog, UtConsumer utConsumer){
-        if(!utConsumer.getId().equals(consumerLog.getCbjId()) && !utConsumer.getId().equals(consumerLog.getChjId())){
-            List<UtConsumer> utConsumerList = new ArrayList<>();
-            utConsumerList.add(cbjUtConsumerService.getUtConsumerById(consumerLog.getCbjId()));
-            utConsumerList.add(chjUtConsumerService.getUtConsumerById(consumerLog.getChjId()));
-            utConsumerList.add(cbjUtConsumerService.getUtConsumerById(utConsumer.getId()));
-            //对比lastlogintime获取最终作为参考的utconsumer
-            long rstId = utConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get().getId();
-            //新数据比之前数据都新则合并余额
-            if(rstId == utConsumer.getId()){
-                //更新log - 用户迁移log
-                if(StrUtil.isNotBlank(utConsumer.getUnionid())){
-                    consumerLog.setUnionid(utConsumer.getUnionid());
+    protected void updateBalance(ConsumerLog consumerLog, UtConsumer utConsumer, int type){
+        //车便捷
+        if(type == 1) {
+            if (!utConsumer.getId().equals(consumerLog.getCbjId())) {
+                List<UtConsumer> utConsumerList = new ArrayList<>();
+                utConsumerList.add(cbjUtConsumerService.getUtConsumerById(consumerLog.getCbjId()));
+                utConsumerList.add(cbjUtConsumerService.getUtConsumerById(utConsumer.getId()));
+                //对比lastlogintime获取最终作为参考的utconsumer
+                long rstId = utConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get().getId();
+                //新数据比之前数据都新则合并余额
+                if (rstId == utConsumer.getId()) {
+                    //更新log - 用户迁移log
+                    if (StrUtil.isNotBlank(utConsumer.getUnionid())) {
+                        consumerLog.setUnionid(utConsumer.getUnionid());
+                    }
+                    consumerLog.setCbjId(utConsumer.getId());
+                    consumerLog.setCbjAccount(utConsumer.getAccount());
+                    consumerLogService.saveOne(consumerLog);
+                    //更新log - 用户余额迁移log
+                    ConsumerLog consumerBalanceLog = consumerLogService.getOneByConsumerIdAndStatusAndType(consumerLog.getConsumerId(), 1, 2);
+                    if (StrUtil.isNotBlank(utConsumer.getUnionid())) {
+                        consumerBalanceLog.setUnionid(utConsumer.getUnionid());
+                    }
+                    consumerBalanceLog.setCbjId(utConsumer.getId());
+                    consumerBalanceLog.setCbjAccount(utConsumer.getAccount());
+                    consumerLogService.saveOne(consumerBalanceLog);
+                    //更新余额
+                    ConsumerBalance realConsumerBalance = consumerBalanceService.getByConsumerIdAndBalanceType(consumerLog.getConsumerId(), BalanceType.REAL_BALANCE);
+                    realConsumerBalance.setValue(realConsumerBalance.getValue() + utConsumer.getBalance());
+                    consumerBalanceService.save(realConsumerBalance);
+                    ConsumerBalance giveConsumerBalance = consumerBalanceService.getByConsumerIdAndBalanceType(consumerLog.getConsumerId(), BalanceType.GIVE_BALANCE);
+                    giveConsumerBalance.setValue(giveConsumerBalance.getValue() + utConsumer.getGiveBalance());
+                    consumerBalanceService.save(giveConsumerBalance);
                 }
-                consumerLog.setCbjId(utConsumer.getId());
-                consumerLog.setCbjAccount(utConsumer.getAccount());
-                consumerLogService.saveOne(consumerLog);
-                //更新log - 用户余额迁移log
-                ConsumerLog consumerBalanceLog = consumerLogService.getOneByConsumerIdAndStatusAndType(consumerLog.getConsumerId(), 1, 2);
-                if(StrUtil.isNotBlank(utConsumer.getUnionid())){
-                    consumerBalanceLog.setUnionid(utConsumer.getUnionid());
-                }
-                consumerBalanceLog.setCbjId(utConsumer.getId());
-                consumerBalanceLog.setCbjAccount(utConsumer.getAccount());
-                consumerLogService.saveOne(consumerBalanceLog);
-                //更新余额
-                ConsumerBalance realConsumerBalance = consumerBalanceService.getByConsumerIdAndBalanceType(consumerLog.getConsumerId(), BalanceType.REAL_BALANCE);
-                realConsumerBalance.setValue(realConsumerBalance.getValue() + utConsumer.getBalance());
-                consumerBalanceService.save(realConsumerBalance);
-                ConsumerBalance giveConsumerBalance = consumerBalanceService.getByConsumerIdAndBalanceType(consumerLog.getConsumerId(), BalanceType.GIVE_BALANCE);
-                giveConsumerBalance.setValue(giveConsumerBalance.getValue() + utConsumer.getGiveBalance());
-                consumerBalanceService.save(giveConsumerBalance);
             }
+        }else if (type == 2){
+            //车惠捷
+
         }
     }
 }

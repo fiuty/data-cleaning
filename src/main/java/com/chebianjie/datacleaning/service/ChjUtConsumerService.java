@@ -10,23 +10,15 @@ public interface ChjUtConsumerService {
 
     UtConsumer getUtConsumerById(Long id);
 
-    Page<UtConsumer> pageUtConsumer(Pageable pageable);
-
     UtConsumer getUtConsumerByUnionid(String unionid);
 
-    /**
-     * 查询jhi_account字段 (即用户手机号)
-     * @param account
-     * @return
-     */
     UtConsumer getUtConsumerByAccount(String account);
+
+    UtConsumer getUtConsumerByPhone(String phone);
 
     List<UtConsumer> getUtConsumerListByAccount(String account);
 
     List<UtConsumer> getUtConsumerListByUnionid(String unionid);
 
-
-    UtConsumer getUtConsumerByPhone(String phone);
-
-    List<UtConsumer> listByUnionid(String unionid);
+    Page<UtConsumer> pageUtConsumer(Pageable pageable);
 }
