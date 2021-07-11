@@ -188,11 +188,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
     public Consumer getByConsumerLog(ConsumerLog consumerLog) {
         Consumer rst = null;
         log.info("[consumerLog]: {}", consumerLog.getId());
-        if(consumerLog.getUnionid() != null && StrUtil.isNotBlank(consumerLog.getUnionid())){
-            rst = consumerRepository.findByWechatUnionId(consumerLog.getUnionid());
-        }else if(StrUtil.isNotBlank(consumerLog.getCbjAccount())){
-            rst = consumerRepository.findByPhone(consumerLog.getCbjAccount());
-        }
+        rst = consumerRepository.findById(consumerLog.getConsumerId()).orElse(null);
         return rst;
     }
 

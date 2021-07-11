@@ -41,35 +41,21 @@ public class ConsumerCouponTask implements Runnable {
             if (type == 1) {
                 //补全union_account - 车便捷
                 utCouponUserService.mergeCbjConsumerCoupon(utCouponUser, consumer);
-                //3.迁移成功记录日志
-                //判断是否有失败记录, 有则更新 无则插入
-                ConsumerCouponLog curConsumerCouponLog = consumerCouponLogService.getOneByUtCouponUserIdAndStatusAndType(utCouponUser.getConsumerId(), 0, type);
-                if(curConsumerCouponLog != null) {
-                    curConsumerCouponLog.setStatus(1);
-                    consumerCouponLogService.saveOne(curConsumerCouponLog);
-                }else{
-                    ConsumerCouponLog temp = new ConsumerCouponLog();
-                    temp.setUtCouponUserId(utCouponUser.getId());
-                    temp.setType(type);
-                    temp.setStatus(1);
-                    consumerCouponLogService.saveOne(temp);
-                }
             } else if (type == 2) {
                 //补全union_account - 车惠捷
                 utCouponUserService.mergeChjConsumerCoupon(utCouponUser, consumer);
-                //3.迁移成功记录日志
-                //判断是否有失败记录, 有则更新 无则插入
-                ConsumerCouponLog curConsumerCouponLog = consumerCouponLogService.getOneByUtCouponUserIdAndStatusAndType(utCouponUser.getConsumerId(), 0, type);
-                if(curConsumerCouponLog != null) {
-                    curConsumerCouponLog.setStatus(1);
-                    consumerCouponLogService.saveOne(curConsumerCouponLog);
-                }else{
-                    ConsumerCouponLog temp = new ConsumerCouponLog();
-                    temp.setUtCouponUserId(utCouponUser.getId());
-                    temp.setType(type);
-                    temp.setStatus(1);
-                    consumerCouponLogService.saveOne(temp);
-                }
+            }
+            //3.迁移成功记录日志 - 判断是否有失败记录, 有则更新 无则插入
+            ConsumerCouponLog curConsumerCouponLog = consumerCouponLogService.getOneByUtCouponUserIdAndStatusAndType(utCouponUser.getConsumerId(), 0, type);
+            if(curConsumerCouponLog != null) {
+                curConsumerCouponLog.setStatus(1);
+                consumerCouponLogService.saveOne(curConsumerCouponLog);
+            }else{
+                ConsumerCouponLog temp = new ConsumerCouponLog();
+                temp.setUtCouponUserId(utCouponUser.getId());
+                temp.setType(type);
+                temp.setStatus(1);
+                consumerCouponLogService.saveOne(temp);
             }
         }catch(Exception e){
             log.error(e.getMessage());

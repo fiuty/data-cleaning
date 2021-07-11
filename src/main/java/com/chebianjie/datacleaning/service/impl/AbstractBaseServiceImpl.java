@@ -88,7 +88,7 @@ public class AbstractBaseServiceImpl {
         if (chjUtConsumer != null) {
             temp.setChjId(chjUtConsumer.getId());
         }
-        if (StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
+        if (cbjUtConsumer != null && StrUtil.isNotBlank(cbjUtConsumer.getAccount())) {
             temp.setCbjAccount(cbjUtConsumer.getAccount());
         }
         if (chjUtConsumer != null && StrUtil.isNotBlank(chjUtConsumer.getAccount())) {

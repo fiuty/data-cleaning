@@ -31,7 +31,7 @@ public class ConsumerController extends AbstractBaseController{
      */
     @GetMapping("/sync")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object synchConsumer(){
+    public Object syncConsumer(){
         long start = System.currentTimeMillis();
         //创建线程
         final ExecutorService es = Executors.newFixedThreadPool(50);
@@ -73,7 +73,8 @@ public class ConsumerController extends AbstractBaseController{
      */
     @GetMapping("/sync2")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object synchConsumer2(){
+    public Object syncConsumer2(){
+        long start = System.currentTimeMillis();
         //创建线程
         ExecutorService es = Executors.newFixedThreadPool(50);
         //同步开始
@@ -103,15 +104,16 @@ public class ConsumerController extends AbstractBaseController{
                     log.info("[CHJ SYNC] EXIST");
                 }
             }
+            page = page + 1;
         }while(page != totalPages);
         es.shutdown();
 
-        return "finish";
+        return "[CHJ SYNC] finish [" + (System.currentTimeMillis() - start) + "]";
     }
 
     @GetMapping("/test")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Object testSynch(@RequestParam("id") long id, @RequestParam("type") int type){
+    public Object syncTest(@RequestParam("id") long id, @RequestParam("type") int type){
         //1.获取车便捷用户
         UtConsumer utConsumer =  type == 1 ? cbjUtConsumerService.getUtConsumerById(id) : chjUtConsumerService.getUtConsumerById(id);
         //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复

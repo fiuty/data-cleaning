@@ -44,25 +44,18 @@ public class ConsumerCouponController extends AbstractBaseController {
                 //3.线上utCouponUser存在consumer_account为null数据,因此判断只用consumer_id
                 if (!checkCleanCoupon(utCouponUser, 1)) {
                     //4.获取当前关联utConsumer搬迁日志(consumerLog)
-                    ConsumerLog curConsumerLog = consumerLogService.getOneByCbjIdAndStatusAndType(utCouponUser.getConsumerId(), 1, 1);
-                    if (curConsumerLog == null) {
-                        ConsumerCouponLog temp = new ConsumerCouponLog();
-                        temp.setType(1);
-                        temp.setStatus(0);
-                        temp.setUtCouponUserId(utCouponUser.getId());
-
+                    ConsumerLog consumerLog = consumerLogService.getOneByCbjIdAndStatusAndType(utCouponUser.getConsumerId(), 1, 1);
+                    if (consumerLog == null) {
+                        //插入失败记录
+                        ConsumerCouponLog temp = generateConsumerCouponLog(utCouponUser.getId(), 1, 0);
                         consumerCouponLogService.saveOne(temp);
                         continue;
                     }
                     //5.根据旧用户数据查找新用户数据
-                    Consumer consumer = consumerService.getByConsumerLog(curConsumerLog);
+                    Consumer consumer = consumerService.getByConsumerLog(consumerLog);
                     // 新用户数据为空插入失败log
                     if (consumer == null) {
-                        ConsumerCouponLog temp = new ConsumerCouponLog();
-                        temp.setType(1);
-                        temp.setStatus(0);
-                        temp.setUtCouponUserId(utCouponUser.getId());
-
+                        ConsumerCouponLog temp = generateConsumerCouponLog(utCouponUser.getId(), 1, 0);
                         consumerCouponLogService.saveOne(temp);
                         continue;
                     }
@@ -100,25 +93,17 @@ public class ConsumerCouponController extends AbstractBaseController {
                 if (!checkCleanCoupon(utCouponUser, 2)) {
                     //4.获取当前关联utConsumer搬迁日志(consumerLog)
                     //log.info("param: [{}]", utCouponUser.getConsumerId());
-                    ConsumerLog curConsumerLog = consumerLogService.getOneByChjIdAndStatusAndType(utCouponUser.getConsumerId(), 1, 1);
-                    if (curConsumerLog == null) {
-                        ConsumerCouponLog temp = new ConsumerCouponLog();
-                        temp.setType(2);
-                        temp.setStatus(0);
-                        temp.setUtCouponUserId(utCouponUser.getId());
-
+                    ConsumerLog consumerLog = consumerLogService.getOneByChjIdAndStatusAndType(utCouponUser.getConsumerId(), 1, 1);
+                    if (consumerLog == null) {
+                        ConsumerCouponLog temp = generateConsumerCouponLog(utCouponUser.getId(), 2, 0);
                         consumerCouponLogService.saveOne(temp);
                         continue;
                     }
                     //5.根据旧用户数据查找新用户数据
-                    Consumer consumer = consumerService.getByConsumerLog(curConsumerLog);
+                    Consumer consumer = consumerService.getByConsumerLog(consumerLog);
                     // 新用户数据为空插入失败log
                     if (consumer == null) {
-                        ConsumerCouponLog temp = new ConsumerCouponLog();
-                        temp.setType(2);
-                        temp.setStatus(0);
-                        temp.setUtCouponUserId(utCouponUser.getId());
-
+                        ConsumerCouponLog temp = generateConsumerCouponLog(utCouponUser.getId(), 2, 0);
                         consumerCouponLogService.saveOne(temp);
                         continue;
                     }
@@ -202,5 +187,14 @@ public class ConsumerCouponController extends AbstractBaseController {
             }
         }
         return "exist";
+    }
+
+    private ConsumerCouponLog generateConsumerCouponLog(long utCouponUserId, int type, int status){
+        ConsumerCouponLog temp = new ConsumerCouponLog();
+        temp.setStatus(status);
+        temp.setType(type);
+        temp.setUtCouponUserId(utCouponUserId);
+
+        return temp;
     }
 }
