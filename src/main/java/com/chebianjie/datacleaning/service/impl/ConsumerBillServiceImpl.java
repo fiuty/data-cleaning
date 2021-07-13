@@ -185,12 +185,6 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         }
     }
 
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    public void addBatchClean(Consumer consumer) {
-
-    }
-
     private void updateConsumerBalance(String unionAccount, BalanceType balanceType, Integer value) {
         //account+balanceType用户余额、赠送余额
         redisTemplate.opsForValue().set(unionAccount + balanceType, NumberUtil.toString(NumberUtil.getIfNull(value)), 1, TimeUnit.MINUTES);
@@ -542,25 +536,25 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void consumerBillJob() {
         DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(1);
-        LocalDateTime timeFrom = dataSynTime.getLastTime();
+        Long timeFrom = dataSynTime.getLastTime();
         LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
         int pageSize = 1000;
         //车便捷分页
-        int cbjTotal = utUserTotalFlowService.cbjCountByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo));
+        int cbjTotal = utUserTotalFlowService.cbjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int cbjTotalPage = computeTotalPage(cbjTotal);
         for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
-            List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo), pageNumber, pageSize);
+            List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             cbjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
         }
 
         //车惠捷分页
-        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo));
+        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
-            List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(toEpochMilli(timeFrom), toEpochMilli(timeTo), pageNumber, pageSize);
+            List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             chjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
         }
-        dataSynTime.setLastTime(timeTo);
+        dataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTimeService.updateDataSynTime(dataSynTime);
         log.info("同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
     }
@@ -577,5 +571,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             ++totalPage;
         }
         return totalPage;
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void cleanOneConsumer(Long id) {
+        Consumer consumer = consumerService.findById(id);
+        rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, consumer.getId());
     }
 }

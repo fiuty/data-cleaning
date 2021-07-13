@@ -23,9 +23,9 @@ public interface ConsumerBillService {
 
     void handleBillDetail(ConsumerBill consumerBill, UtUserTotalFlow flow);
 
-    void addBatchClean(Consumer consumer);
-
     Boolean isBalanceChange(ConsumerBill consumerBill);
 
     ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform);
+
+    void cleanOneConsumer(Long id);
 }

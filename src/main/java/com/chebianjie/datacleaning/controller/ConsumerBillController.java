@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
@@ -30,7 +31,7 @@ public class ConsumerBillController {
     @Autowired
     private ConsumerService consumerService;
 
-    @GetMapping("/consumerBillClean/one")
+    @GetMapping("/consumerBillClean")
     public void consumerBillCleanOne() {
         int total = consumerService.countByRegistryTimeLessThanEqual(dataCleanConfiguration.getFlowConsumerTime());
         int totalPage = computeTotalPage(total);
@@ -44,6 +45,11 @@ public class ConsumerBillController {
         }
         Instant totalEnd = Instant.now();
         log.info("总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
+    }
+
+    @GetMapping("/consumerBillClean/one")
+    public void cleanOneConsumer(@RequestParam("id") Long id) {
+        consumerBillService.cleanOneConsumer(id);
     }
 
     @GetMapping("/delete/fail")

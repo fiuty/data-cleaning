@@ -22,6 +22,13 @@ public interface UtStaffLogRepository extends JpaRepository<UtStaffLog, Long>, J
 
     int countByCreatetimeLessThanEqual(Long creatTime);
 
-    @Query(nativeQuery = true, value = "select * from ut_staff_log where create_time <= :createTime order by create_time asc limit :pageNumber, :pageSize")
+    @Query(nativeQuery = true, value = "select * from ut_staff_log t,(select id from ut_staff_log where createtime <= :createTime order by createtime asc limit :pageNumber, :pageSize) temp where t.id = temp.id")
     List<UtStaffLog> findAllByCreateTimePage(@Param("createTime") Long createTime, @Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
+
+    int countByCreatetimeBetween(Long timeFrom, Long timeTo);
+
+
+    @Query(nativeQuery = true,value = "select * from ut_staff_log t,(select id from ut_staff_log where createtime >= :timeFrom and createtime <= :timeTo order by id limit :pageNumber, :pageSize) temp where t.id = temp.id")
+    List<UtStaffLog> findAllByCreatetimeBetweenPage(@Param("timeFrom") Long timeFrom, @Param("timeTo") Long timeTo, @Param("pageNumber") int pageNumber, @Param("pageSize") int pageSize);
+
 }

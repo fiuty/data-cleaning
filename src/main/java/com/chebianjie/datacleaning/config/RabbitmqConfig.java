@@ -63,9 +63,9 @@ public class RabbitmqConfig {
         //确认消费模式为自动确认机制
         factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         //设置并发消费者实例的初始数量。
-        factory.setConcurrentConsumers(30);
+        factory.setConcurrentConsumers(10);
         //设置并发消费者实例的最大数量。
-        factory.setMaxConcurrentConsumers(30);
+        factory.setMaxConcurrentConsumers(40);
         //设置并发消费者实例中每个实例拉取的消息数量。
         factory.setPrefetchCount(10);
         return factory;

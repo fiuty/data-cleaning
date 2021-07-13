@@ -21,10 +21,10 @@ public class DataSynTime {
     /**
      * 最后同步时间
      */
-    private LocalDateTime lastTime;
+    private Long lastTime;
 
     /**
-     * 同步类型:1-用户流水
+     * 同步类型:1-用户流水，2-员工业绩
      */
     private Integer synType;
 }
