@@ -135,7 +135,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
         rst.setConsumptionNum(utConsumer.getOrderNum() != null ? utConsumer.getOrderNum().intValue() : null);
         rst.setConsumptionPrice(utConsumer.getConsumptionAmount());
         rst.setLastLoginTime(utConsumer.getLastlogintime() != null ? LocalDateTime.ofEpochSecond(utConsumer.getLastlogintime()/1000, 0, ZoneOffset.ofHours(8)) : null);
-        rst.setIntegral(utConsumer.getLastlogintime() != null ? utConsumer.getIntegral() : 0);
+        rst.setIntegral(utConsumer.getIntegral() != null ? utConsumer.getIntegral() : 0);
 
         return rst;
     }
