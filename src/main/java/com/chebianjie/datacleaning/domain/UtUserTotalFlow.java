@@ -187,7 +187,7 @@ public class UtUserTotalFlow implements Serializable {
     private Integer washRealPrice;
 
     /**
-     * 洗车订单类型：1-洗车,2-商城,3-大客户消费类型,4-单次消费,5-中石化优惠券,6-年卡消费
+     * 洗车订单类型：1-洗车,2-商城,3-大客户消费类型,4-单次消费,5-中石化优惠券,6-年卡消费,7-增值服务代洗
      */
     private Integer washConsumeType;
 

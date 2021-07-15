@@ -19,9 +19,13 @@ public class UtStaffLogController {
     @Autowired
     private UtStaffLogService utStaffLogService;
 
-    @GetMapping("/staffLog/clean")
+    @GetMapping("/staffLog/cbjClean")
     public void clean() {
         utStaffLogService.firstCbjClean();
+    }
+
+    @GetMapping("/staffLog/chjClean")
+    public void chjClean() {
         utStaffLogService.firstChjClean();
     }
 }

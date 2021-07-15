@@ -1,7 +1,6 @@
 package com.chebianjie.datacleaning.service.impl;
 
 import com.chebianjie.common.core.util.CollectUtil;
-import com.chebianjie.common.core.util.DateUtil;
 import com.chebianjie.common.core.util.NumberUtil;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
@@ -87,6 +86,9 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Autowired
     private FlowLogService flowLogService;
 
+    @Autowired
+    private BatchSaveService batchSaveService;
+
     @Override
     public void cleanOne(int pageNumber, int pageSize) {
         List<Consumer> consumers = consumerService.findAllByPage(pageNumber * pageSize, pageSize);
@@ -108,7 +110,6 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
 
     @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_FIRST_BILL_QUEUE, containerFactory = "multiListenerContainer")
     public void threadClean(Long id, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
-        log.info("监听消息,用户id:{},tag:{}",id,tag);
         Consumer consumer = consumerService.findById(id);
         try {
             //过滤重复清洗
@@ -165,6 +166,9 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             Integer consumerGiveBalance = getBalance(balanceMap.get(BalanceType.GIVE_BALANCE));
             updateConsumerBalance(consumer.getUnionAccount(), BalanceType.REAL_BALANCE, consumerBalance);
             updateConsumerBalance(consumer.getUnionAccount(), BalanceType.GIVE_BALANCE, consumerGiveBalance);
+            List<ConsumerBill> consumerBills = new ArrayList<>(flows.size());
+            List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(flows.size() * 2);
+            List<FlowLog> flowLogs = new ArrayList<>(flows.size());
             for (UtUserTotalFlow currentFlow : flows) {
                 if (currentFlow.getAgentId() != null) {
                     log.info("大客户流水,跳过flow：{}", currentFlow);
@@ -172,14 +176,20 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 }
                 //清洗流水
                 ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
-                handleBillDetail(consumerBill, currentFlow);
-                flowLogService.save(currentFlow.getId(), consumerBill.getPlatform(), 1);
+                List<ConsumerBillChangeDetail> consumerBillChangeDetailTemps = handleBillDetail(consumerBill, currentFlow);
+                FlowLog flowLog = new FlowLog(currentFlow.getId(), consumerBill.getPlatform(), 1);
+                consumerBills.add(consumerBill);
+                if (CollectUtil.collectionNotEmpty(consumerBillChangeDetailTemps)) {
+                    consumerBillChangeDetails.addAll(consumerBillChangeDetailTemps);
+                }
+                flowLogs.add(flowLog);
             }
+            batchSaveService.firstBatchSaveAll(consumerBills, consumerBillChangeDetails, flowLogs);
             billLogService.save(consumer.getUnionAccount(), 1);
             flows = null;
             channel.basicAck(tag, false);
         } catch (Exception e) {
-            log.error("清洗流水异常e：", e);
+            log.error("清洗流水异常，用户id:{}，erromessage:{}", id, e.getMessage());
             billLogService.save(consumer.getUnionAccount(), 0);
             channel.basicReject(tag, false);
         }
@@ -194,7 +204,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         return NumberUtil.toInteger(redisTemplate.opsForValue().get(unionAccount + balanceType));
     }
 
-    public void handleBillDetail(ConsumerBill consumerBill, UtUserTotalFlow flow) {
+    public List<ConsumerBillChangeDetail> handleBillDetail(ConsumerBill consumerBill, UtUserTotalFlow flow) {
         if (isBalanceChange(consumerBill)) {
             String unionAccount = consumerBill.getUnionAccount();
             Integer balance = getConsumerBalance(unionAccount, BalanceType.REAL_BALANCE);
@@ -203,19 +213,22 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             Integer changeGiveBalance = NumberUtil.addIfNull(flow.getNewGiveBalance(), NumberUtil.negativeIfNull(flow.getOldGiveBalance()));
             ConsumerBillChangeDetail balanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), balance, changeBalance, BalanceType.REAL_BALANCE, consumerBill.getPlatform());
             ConsumerBillChangeDetail giveBalanceBillDetail = fillInfoChangeDetail(consumerBill.getBillIdentify(), giveBalance, changeGiveBalance, BalanceType.GIVE_BALANCE, consumerBill.getPlatform());
-            consumerBillDetailSaveService.save(balanceBillDetail);
-            consumerBillDetailSaveService.save(giveBalanceBillDetail);
+            List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(2);
+            consumerBillChangeDetails.add(balanceBillDetail);
+            consumerBillChangeDetails.add(giveBalanceBillDetail);
             updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getPreChangeValue());
             updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getPreChangeValue());
+            return consumerBillChangeDetails;
         }
+        return null;
     }
 
     //余额流水,金额变动
     public Boolean isBalanceChange(ConsumerBill consumerBill) {
         BillType billType = consumerBill.getBillType();
-        //普通洗车
+        //普通洗车/未启动机器代洗(保存余额变更无变更。)
         if (billType == BillType.WASH) {
-            return consumerBill.getOrderPaymentType() == OrderPaymentType.ORDINARY;
+            return (consumerBill.getOrderPaymentType() == OrderPaymentType.ORDINARY) ||  (Objects.equals(consumerBill.getOrderStatus(),OrderStatus.UNSTART) && Objects.equals(consumerBill.getOrderPaymentType(),OrderPaymentType.SERVER));
             //充值、商城、退款、门店
         } else if (billType == BillType.CHARGE || billType == BillType.MALL || billType == BillType.REFUND || billType == BillType.STORE) {
             return true;
@@ -312,6 +325,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                     consumerBill.setPaymentMethod(PaymentMethod.WECHAT);
                 }
             }
+            //未启动机器
+            if (Objects.equals(currentFlow.getTrxExpandType(), 23)) {
+                consumerBill.setOrderStatus(OrderStatus.UNSTART);
+            }
             //商城消费
         } else if (trxType == 3) {
             consumerBill.setBillType(BillType.MALL);
@@ -377,6 +394,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             consumerBill.setBillType(BillType.CONSUMER_CARD);
             consumerBill.setOrderStatus(OrderStatus.FINISH);
             consumerBill.setBusinessId(NumberUtil.toString(currentFlow.getUserConsumeCardId()));
+            consumerBill.setPaymentAmount(currentFlow.getAmount());
             //增值服务
         } else if (trxType == 10) {
             consumerBill.setBillType(BillType.SERVER);
@@ -393,7 +411,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 consumerBill.setPaymentMethod(PaymentMethod.BALANCE);
             }
         }
-        consumerBillSaveService.save(consumerBill);
+        //consumerBillSaveService.save(consumerBill);
         return consumerBill;
     }
 
@@ -409,6 +427,8 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 return OrderPaymentType.SINOPEC;
             } else if (washConsumeType == 6) {
                 return OrderPaymentType.CONSUMERCARD;
+            } else if (washConsumeType == 7) {
+                return OrderPaymentType.SERVER;
             }
         }
         return null;
@@ -543,16 +563,22 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         int cbjTotal = utUserTotalFlowService.cbjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int cbjTotalPage = computeTotalPage(cbjTotal);
         for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
+            Instant now = Instant.now();
             List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             cbjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+            Instant end = Instant.now();
+            log.info("车便捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
 
         //车惠捷分页
         int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
+            Instant now = Instant.now();
             List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             chjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+            Instant end = Instant.now();
+            log.info("车惠捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         dataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTimeService.updateDataSynTime(dataSynTime);
@@ -578,5 +604,16 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     public void cleanOneConsumer(Long id) {
         Consumer consumer = consumerService.findById(id);
         rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, consumer.getId());
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void handleFail() {
+        List<BillLog> billLogs = billLogService.findByStatus(0);
+        billLogs.forEach(billLog -> {
+            Consumer consumer = consumerService.findByUnionAccount(billLog.getUnionAccount());
+            rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, consumer.getId());
+        });
+        billLogService.deleteAll(billLogs);
     }
 }

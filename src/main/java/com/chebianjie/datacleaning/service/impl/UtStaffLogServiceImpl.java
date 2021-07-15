@@ -113,16 +113,22 @@ public class UtStaffLogServiceImpl implements UtStaffLogService {
         int cbjTotal = this.cbjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int cbjTotalPage = computeTotalPage(cbjTotal);
         for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
+            Instant now = Instant.now();
             List<UtStaffLog> cbjStaffLogs = this.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             List<UtStaffLog> filterLogs = cbjStaffLogs.stream().filter(log -> log.getConsumerId() != null).collect(Collectors.toList());
             convertAndSend(filterLogs, Platform.CHEBIANJIE);
+            Instant end = Instant.now();
+            log.info("车便捷员工业绩总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         int chjTotal = this.chjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
+            Instant now = Instant.now();
             List<UtStaffLog> chjStaffLogs = this.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             List<UtStaffLog> filterLogs = chjStaffLogs.stream().filter(log -> log.getConsumerId() != null).collect(Collectors.toList());
             convertAndSend(filterLogs, Platform.CHEHUIJIE);
+            Instant end = Instant.now();
+            log.info("车惠捷员工业绩总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         dataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTimeService.updateDataSynTime(dataSynTime);

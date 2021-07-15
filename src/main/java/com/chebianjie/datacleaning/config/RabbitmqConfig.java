@@ -65,7 +65,7 @@ public class RabbitmqConfig {
         //设置并发消费者实例的初始数量。
         factory.setConcurrentConsumers(10);
         //设置并发消费者实例的最大数量。
-        factory.setMaxConcurrentConsumers(40);
+        factory.setMaxConcurrentConsumers(20);
         //设置并发消费者实例中每个实例拉取的消息数量。
         factory.setPrefetchCount(10);
         return factory;

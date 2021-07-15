@@ -67,11 +67,13 @@ public class ConsumerBillListener {
     @Autowired
     private FlowLogService flowLogService;
 
+    @Autowired
+    private BatchSaveService batchSaveService;
+
     @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_BILL_QUEUE, containerFactory = "singleListenerContainerManual")
     @RabbitHandler
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void conusmeMsg(UtUserTotalFlow message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
-        log.info("流水清洗,消费时间：{},消息：{}", LocalDateTime.now(), JSONUtil.toJsonStr(message));
         try {
             //判断重复
             Boolean flowRepeat = flowLogService.repeatClean(message.getId(), message.getPlatform());
@@ -99,16 +101,28 @@ public class ConsumerBillListener {
                     return;
                 }
                 flows.sort(Comparator.comparing(UtUserTotalFlow::getCreateTime).reversed());
+                List<ConsumerBill> consumerBills = new ArrayList<>(flows.size());
+                List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(flows.size() * 2);
+                List<FlowLog> flowLogs = new ArrayList<>(flows.size());
+                List<AddBillLog> addBillLogs = new ArrayList<>(flows.size());
                 for (UtUserTotalFlow currentFlow : flows) {
                     //清洗流水
                     ConsumerBill consumerBill = consumerBillService.fillInfoConsumerBill(currentFlow, consumer);
-                    consumerBillService.handleBillDetail(consumerBill, currentFlow);
-                    addBillLogService.save(currentFlow.getId(), consumerBill.getPlatform(), 1, null);
-                    flowLogService.save(currentFlow.getId(), consumerBill.getPlatform(), 1);
+                    List<ConsumerBillChangeDetail> consumerBillChangeDetailTemps = consumerBillService.handleBillDetail(consumerBill, currentFlow);
+                    AddBillLog addBillLog = new AddBillLog(currentFlow.getId(), consumerBill.getPlatform(), 1, null);
+                    FlowLog flowLog = new FlowLog(currentFlow.getId(), consumerBill.getPlatform(), 1);
+                    consumerBills.add(consumerBill);
+                    if (CollectUtil.collectionNotEmpty(consumerBillChangeDetailTemps)) {
+                        consumerBillChangeDetails.addAll(consumerBillChangeDetailTemps);
+                    }
+                    flowLogs.add(flowLog);
+                    addBillLogs.add(addBillLog);
                 }
+                batchSaveService.addBatchSaveAll(consumerBills, consumerBillChangeDetails, addBillLogs, flowLogs);
             } else {
                 //后续流水
                 ConsumerBill consumerBill = consumerBillService.fillInfoConsumerBill(message, consumer);
+                List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(2);
                 if (consumerBillService.isBalanceChange(consumerBill)) {
                     //上一笔流水余额
                     String billIdentify = lastConsumerBill.getBillIdentify();
@@ -120,20 +134,21 @@ public class ConsumerBillListener {
                     Integer changeGiveBalance = NumberUtil.addIfNull(message.getNewGiveBalance(), NumberUtil.negativeIfNull(message.getOldGiveBalance()));
                     ConsumerBillChangeDetail balanceBillDetail = consumerBillService.fillInfoChangeDetail(consumerBill.getBillIdentify(), balance, changeBalance, BalanceType.REAL_BALANCE, consumerBill.getPlatform());
                     ConsumerBillChangeDetail giveBalanceBillDetail = consumerBillService.fillInfoChangeDetail(consumerBill.getBillIdentify(), giveBalance, changeGiveBalance, BalanceType.GIVE_BALANCE, consumerBill.getPlatform());
-                    consumerBillDetailSaveService.save(balanceBillDetail);
-                    consumerBillDetailSaveService.save(giveBalanceBillDetail);
+                    consumerBillChangeDetails.add(balanceBillDetail);
+                    consumerBillChangeDetails.add(giveBalanceBillDetail);
                 }
-                addBillLogService.save(message.getId(), consumerBill.getPlatform(), 1, null);
-                flowLogService.save(message.getId(), consumerBill.getPlatform(), 1);
+                AddBillLog addBillLog = new AddBillLog(message.getId(), consumerBill.getPlatform(), 1, null);
+                FlowLog flowLog = new FlowLog(message.getId(), consumerBill.getPlatform(), 1);
+                batchSaveService.addSaveAll(consumerBill,consumerBillChangeDetails,addBillLog,flowLog);
             }
             channel.basicAck(tag, false);
         } catch (Exception e) {
-            log.error("流水清洗,消息：{},处理发生异常e：", JSONUtil.toJsonStr(message), e);
+            log.error("流水清洗,消息：{},处理发生异常erromessage：{}", JSONUtil.toJsonStr(message), e.getMessage());
             channel.basicReject(tag, false);
             try {
                 addBillLogService.save(message.getId(), message.getPlatform(), 0, JSONUtil.toJsonStr(message));
             } catch (Exception e1) {
-                log.error("流水清洗,消息：{},保存异常出现异常e：", JSONUtil.toJsonStr(message), e1);
+                log.error("流水清洗,消息：{},保存异常出现异常erromessage：{}", JSONUtil.toJsonStr(message), e1.getMessage());
                 channel.basicReject(tag, true);
             }
         }

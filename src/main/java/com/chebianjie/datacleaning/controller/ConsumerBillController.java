@@ -41,15 +41,20 @@ public class ConsumerBillController {
             Instant now = Instant.now();
             consumerBillService.cleanOne(pageNumber, pageSize);
             Instant end = Instant.now();
-            log.info("总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
+            log.info("用户流水清洗,总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         Instant totalEnd = Instant.now();
-        log.info("总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
+        log.info("用户流水清洗,总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
     }
 
     @GetMapping("/consumerBillClean/one")
     public void cleanOneConsumer(@RequestParam("id") Long id) {
         consumerBillService.cleanOneConsumer(id);
+    }
+
+    @GetMapping("/consumerBillClean/handleFail")
+    public void handleFail() {
+        consumerBillService.handleFail();
     }
 
     @GetMapping("/delete/fail")

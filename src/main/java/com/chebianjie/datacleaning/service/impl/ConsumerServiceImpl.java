@@ -213,4 +213,10 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
         Long totalConsumer = consumerRepository.findTotalConsumer();
         return totalConsumer;
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Consumer findByUnionAccount(String unionAccount) {
+        return consumerRepository.findByUnionAccount(unionAccount);
+    }
 }

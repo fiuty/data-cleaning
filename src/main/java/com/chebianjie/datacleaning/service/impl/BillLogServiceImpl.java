@@ -43,4 +43,10 @@ public class BillLogServiceImpl implements BillLogService {
     public Boolean repeatClean(String unionAccount) {
         return billLogRepository.findByUnionAccountAndStatus(unionAccount, 1) != null;
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void deleteAll(List<BillLog> billLogs) {
+        billLogRepository.deleteAll(billLogs);
+    }
 }

@@ -19,4 +19,6 @@ public interface BillLogService {
      * 是否重复清洗
      */
     Boolean repeatClean(String unionAccount);
+
+    void deleteAll(List<BillLog> billLogs);
 }

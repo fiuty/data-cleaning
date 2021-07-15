@@ -31,4 +31,12 @@ public class FlowLog {
      * 状态：0-失败。1-成功
      */
     private Integer status;
+
+    public FlowLog(Long utUserTotalFlowId, Platform platform, Integer status) {
+        this.utUserTotalFlowId = utUserTotalFlowId;
+        this.platform = platform;
+        this.status = status;
+    }
+
+    public FlowLog() {}
 }

@@ -32,4 +32,6 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
     @Query(nativeQuery = true,value = "select count(1) from consumer")
     Long findTotalConsumer();
 
+    Consumer findByUnionAccount(String unionAccount);
+
 }

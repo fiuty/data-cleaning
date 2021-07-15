@@ -37,4 +37,13 @@ public class AddBillLog {
      */
     private String json;
 
+    public AddBillLog(Long utUserTotalFlowId, Platform platform, Integer status, String json) {
+        this.utUserTotalFlowId = utUserTotalFlowId;
+        this.platform = platform;
+        this.status = status;
+        this.json = json;
+    }
+
+    public AddBillLog(){}
+
 }

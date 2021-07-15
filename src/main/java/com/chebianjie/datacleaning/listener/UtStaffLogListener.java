@@ -46,7 +46,6 @@ public class UtStaffLogListener {
     @RabbitHandler
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void firstConusmeMsg(StaffLogMessage message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
-        log.info("监听员工清洗,员工id:{},tags:{}", message.getId(), tag);
         try {
             ConsumerLog consumerLog = consumerLogService.findOneByCbjIdOrChjId(message.getConsumerId(), message.getPlatform());
             if (consumerLog == null) {
@@ -64,7 +63,7 @@ public class UtStaffLogListener {
             }
             channel.basicAck(tag, false);
         } catch (Exception e) {
-            log.error("清洗员工业绩异常,消息message:{},e:", message, e);
+            log.error("清洗员工业绩异常,消息message:{},erromessage:{}", message, e.getMessage());
             channel.basicAck(tag, false);
         }
     }

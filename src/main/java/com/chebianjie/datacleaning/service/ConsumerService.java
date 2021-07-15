@@ -32,4 +32,6 @@ public interface ConsumerService {
     Consumer findByWechatUnionId(String wechatUnionId);
 
     Consumer findByPhone(String phone);
+
+    Consumer findByUnionAccount(String unionAccount);
 }
