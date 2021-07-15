@@ -77,9 +77,11 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
                 }else{
                     consumer = transConsumer(chjUtConsumer, 2);
                 }
+                //4. 处理积分
+                fixIntegral(consumer, cbjUtConsumer, chjUtConsumer);
             }
             consumerRepository.save(consumer);
-            //4.迁移成功记录日志 - 判断是否有失败记录, 有则更新 无则插入
+            //5.迁移成功记录日志 - 判断是否有失败记录, 有则更新 无则插入
             ConsumerLog curConsumerLog = getFailConsumerLog(cbjUtConsumer , chjUtConsumer, 1);
             if(curConsumerLog != null) {
                 curConsumerLog.setConsumerId(consumer.getId());
@@ -92,7 +94,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
             }
         }catch (Exception e){
             log.error(e.getMessage());
-            //5. 有任何报错记录log 失败
+            //6. 有任何报错记录log 失败
             ConsumerLog temp = generateConsumerLog(cbjUtConsumer, chjUtConsumer, 1, 0);
             consumerLogRepository.save(temp);
         }
@@ -101,7 +103,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
 
     /**
      * 转旧consumer为新consumer
-     * @param utConsumer
+     * @param utConsumer 旧consumer
      * @param platform 1:车便捷 2:车惠捷
      * @return
      */
@@ -114,7 +116,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
         rst.setRegistryTime(utConsumer.getCreatetime() != null ? LocalDateTime.ofEpochSecond(utConsumer.getCreatetime()/1000, 0, ZoneOffset.ofHours(8)) : null);
         rst.setRegistryPlatform(platform == 1 ? Platform.CHEBIANJIE : Platform.CHEHUIJIE);
         rst.setClientType(utConsumer.getDataFrom() != null ? ClientType.fixClientType(utConsumer.getDataFrom()) : null);
-        //以jih_account为准确手机号
+        //以jhi_account为准确手机号
         rst.setPhone(StrUtil.isNotBlank(utConsumer.getAccount()) ? utConsumer.getAccount() : null);
         rst.setLoginPassword(StrUtil.isNotBlank(utConsumer.getPwd()) ? utConsumer.getPwd() : null);
         rst.setPayPassword(StrUtil.isNotBlank(utConsumer.getPwd2()) ? utConsumer.getPwd2() : null);
@@ -133,7 +135,7 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
         rst.setConsumptionNum(utConsumer.getOrderNum() != null ? utConsumer.getOrderNum().intValue() : null);
         rst.setConsumptionPrice(utConsumer.getConsumptionAmount());
         rst.setLastLoginTime(utConsumer.getLastlogintime() != null ? LocalDateTime.ofEpochSecond(utConsumer.getLastlogintime()/1000, 0, ZoneOffset.ofHours(8)) : null);
-        //TODO 没有积分
+        rst.setIntegral(utConsumer.getLastlogintime() != null ? utConsumer.getIntegral() : 0);
 
         return rst;
     }

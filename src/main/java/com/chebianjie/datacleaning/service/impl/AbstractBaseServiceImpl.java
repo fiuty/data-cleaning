@@ -1,6 +1,7 @@
 package com.chebianjie.datacleaning.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.chebianjie.datacleaning.domain.Consumer;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.repository.ConsumerBalanceRepository;
@@ -97,5 +98,16 @@ public class AbstractBaseServiceImpl {
         temp.setType(type);
         temp.setStatus(status);
         return temp;
+    }
+
+    /**
+     * 合并积分
+     * @param consumer 合并consumer
+     * @param cbjUtConsumer 旧车便捷consumer
+     * @param chjUtConsumer 旧车惠捷consumer
+     */
+    protected void fixIntegral(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        int integral = (cbjUtConsumer == null ? 0 : cbjUtConsumer.getIntegral()) + (chjUtConsumer == null ? 0 : chjUtConsumer.getIntegral());
+        consumer.setIntegral(integral);
     }
 }
