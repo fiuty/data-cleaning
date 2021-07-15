@@ -62,4 +62,16 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
     public List<UtConsumer> getUtConsumerListByUnionid(String unionid) {
         return utConsumerRepository.findListByUnionid(unionid);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public int countByCreatetimeLessThanEqual(Long consumerTime) {
+        return utConsumerRepository.countByCreatetimeLessThanEqual(consumerTime);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public List<UtConsumer> findAllByPage(int pageNumber, int pageSize) {
+        return utConsumerRepository.findAllByPage(pageNumber,pageSize);
+    }
 }

@@ -50,5 +50,15 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
         return utConsumerRepository.findAll(pageable);
     }
 
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public int countByCreatetimeLessThanEqual(Long consumerTime) {
+        return utConsumerRepository.countByCreatetimeLessThanEqual(consumerTime);
+    }
 
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public List<UtConsumer> findAllByPage(int pageNumber, int pageSize) {
+        return utConsumerRepository.findAllByPage(pageNumber, pageSize);
+    }
 }

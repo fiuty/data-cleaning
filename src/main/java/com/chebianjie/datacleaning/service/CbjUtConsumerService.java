@@ -18,4 +18,7 @@ public interface CbjUtConsumerService {
 
     Page<UtConsumer> pageUtConsumer(Pageable pageable);
 
+    int countByCreatetimeLessThanEqual(Long consumerTime);
+
+    List<UtConsumer> findAllByPage(int pageNumber, int pageSize);
 }
