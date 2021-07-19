@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  * @author zhengdayue
  * @date: 2021-07-07
  */
-public interface FlowLogRepository extends JpaRepository<FlowLog, Long>, JpaSpecificationExecutor<FlowLog> {
+public interface FlowLogRepository extends JpaRepository<FlowLog, Long>, JpaSpecificationExecutor<FlowLog>,BaseRepository<FlowLog,Long> {
 
     FlowLog findByUtUserTotalFlowIdAndPlatform(Long utUserTotalFlowId, Platform platform);
 }

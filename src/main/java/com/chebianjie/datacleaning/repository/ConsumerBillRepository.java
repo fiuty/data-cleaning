@@ -13,11 +13,11 @@ import java.util.List;
  * @author zhengdayue
  * @date: 2021-06-08
  */
-public interface ConsumerBillRepository extends JpaRepository<ConsumerBill, Long>, JpaSpecificationExecutor<ConsumerBill> {
+public interface ConsumerBillRepository extends JpaRepository<ConsumerBill, Long>, JpaSpecificationExecutor<ConsumerBill>, BaseRepository<ConsumerBill, Long> {
 
     List<ConsumerBill> findAllByUnionAccountIn(List<String> unionAccount);
 
-    @Query(nativeQuery = true,value = "select * from consumer_bill where union_account = :unionAccount order by create_time desc limit 0,1")
+    @Query(nativeQuery = true, value = "select * from consumer_bill where union_account = :unionAccount order by create_time desc limit 0,1")
     ConsumerBill findAllByUnionAccount(@Param("unionAccount") String unionAccount);
 
 }

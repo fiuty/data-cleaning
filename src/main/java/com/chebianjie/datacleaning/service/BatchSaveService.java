@@ -13,8 +13,6 @@ import java.util.List;
  */
 public interface BatchSaveService {
 
-    void firstSaveAll(ConsumerBill consumerBill, List<ConsumerBillChangeDetail> consumerBillChangeDetails, FlowLog flowLog);
-
     void addSaveAll(ConsumerBill consumerBill, List<ConsumerBillChangeDetail> consumerBillChangeDetails, AddBillLog addBillLog, FlowLog flowLog);
 
     void firstBatchSaveAll(List<ConsumerBill> consumerBills, List<ConsumerBillChangeDetail> consumerBillChangeDetails, List<FlowLog> flowLogs);

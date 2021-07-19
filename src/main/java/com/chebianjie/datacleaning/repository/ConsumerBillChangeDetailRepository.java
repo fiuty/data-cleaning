@@ -12,7 +12,7 @@ import java.util.List;
  * @author zhengdayue
  * @date: 2021-06-08
  */
-public interface ConsumerBillChangeDetailRepository extends JpaRepository<ConsumerBillChangeDetail, Long>, JpaSpecificationExecutor<ConsumerBillChangeDetail> {
+public interface ConsumerBillChangeDetailRepository extends JpaRepository<ConsumerBillChangeDetail, Long>, JpaSpecificationExecutor<ConsumerBillChangeDetail>, BaseRepository<ConsumerBillChangeDetail, Long> {
 
     void deleteAllByBillIdentifyIn(List<String> billIdentifies);
 

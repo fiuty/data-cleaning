@@ -41,23 +41,12 @@ public class BatchSaveServiceImpl implements BatchSaveService {
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void firstSaveAll(ConsumerBill consumerBill, List<ConsumerBillChangeDetail> consumerBillChangeDetails, FlowLog flowLog) {
-        consumerBillRepository.save(consumerBill);
-        if (CollectUtil.collectionNotEmpty(consumerBillChangeDetails)) {
-            consumerBillChangeDetailRepository.saveAll(consumerBillChangeDetails);
-        }
-        flowLogRepository.save(flowLog);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void firstBatchSaveAll(List<ConsumerBill> consumerBills, List<ConsumerBillChangeDetail> consumerBillChangeDetails, List<FlowLog> flowLogs) {
-        consumerBillRepository.saveAll(consumerBills);
+        consumerBillRepository.batchInsert(consumerBills);
         if (CollectUtil.collectionNotEmpty(consumerBillChangeDetails)) {
-            consumerBillChangeDetailRepository.saveAll(consumerBillChangeDetails);
+            consumerBillChangeDetailRepository.batchInsert(consumerBillChangeDetails);
         }
-        flowLogRepository.saveAll(flowLogs);
+        flowLogRepository.batchInsert(flowLogs);
     }
 
     @Override
@@ -66,7 +55,7 @@ public class BatchSaveServiceImpl implements BatchSaveService {
     public void addSaveAll(ConsumerBill consumerBill, List<ConsumerBillChangeDetail> consumerBillChangeDetails, AddBillLog addBillLog, FlowLog flowLog) {
         consumerBillRepository.save(consumerBill);
         if (CollectUtil.collectionNotEmpty(consumerBillChangeDetails)) {
-            consumerBillChangeDetailRepository.saveAll(consumerBillChangeDetails);
+            consumerBillChangeDetailRepository.batchInsert(consumerBillChangeDetails);
         }
         flowLogRepository.save(flowLog);
         addBillLogRepository.save(addBillLog);
@@ -76,11 +65,11 @@ public class BatchSaveServiceImpl implements BatchSaveService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void addBatchSaveAll(List<ConsumerBill> consumerBills, List<ConsumerBillChangeDetail> consumerBillChangeDetails, List<AddBillLog> addBillLogs, List<FlowLog> flowLogs) {
-        consumerBillRepository.saveAll(consumerBills);
+        consumerBillRepository.batchInsert(consumerBills);
         if (CollectUtil.collectionNotEmpty(consumerBillChangeDetails)) {
-            consumerBillChangeDetailRepository.saveAll(consumerBillChangeDetails);
+            consumerBillChangeDetailRepository.batchInsert(consumerBillChangeDetails);
         }
-        flowLogRepository.saveAll(flowLogs);
-        addBillLogRepository.saveAll(addBillLogs);
+        flowLogRepository.batchInsert(flowLogs);
+        addBillLogRepository.batchInsert(addBillLogs);
     }
 }
