@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class ConsumerLogServiceImpl implements ConsumerLogService {
@@ -104,5 +106,11 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
         } else {
             return consumerLogRepository.findOneByCbjIdAndStatusAndType(id, 1, 1);
         }
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<ConsumerLog> findAllByConsumerIdInAndType(List<Long> consumerIds, int type) {
+        return consumerLogRepository.findAllByConsumerIdInAndType(consumerIds, type);
     }
 }

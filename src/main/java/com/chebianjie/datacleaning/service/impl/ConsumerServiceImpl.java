@@ -187,6 +187,12 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<Consumer> findAllByIdIn(List<Long> ids) {
+        return consumerRepository.findAllById(ids);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public Consumer getByConsumerLog(ConsumerLog consumerLog) {
         Consumer rst = null;
         log.info("[consumerLog]: {}", consumerLog.getId());

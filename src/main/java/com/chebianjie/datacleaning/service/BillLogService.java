@@ -4,6 +4,7 @@ package com.chebianjie.datacleaning.service;
 import com.chebianjie.datacleaning.domain.BillLog;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zhengdayue
@@ -21,4 +22,8 @@ public interface BillLogService {
     Boolean repeatClean(String unionAccount);
 
     void deleteAll(List<BillLog> billLogs);
+
+    void saveAll(List<String> unionAccounts, Integer status);
+
+    Map<String, Boolean> batchRepeatClean(List<String> unionAccount);
 }

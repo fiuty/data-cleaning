@@ -12,6 +12,7 @@ import com.chebianjie.datacleaning.repository.ConsumerBillChangeDetailRepository
 import com.chebianjie.datacleaning.repository.ConsumerBillRepository;
 import com.chebianjie.datacleaning.repository.FlowLogRepository;
 import com.chebianjie.datacleaning.service.BatchSaveService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -24,6 +25,7 @@ import java.util.List;
  * @date: 2021-07-13
  */
 @Service
+@Slf4j
 public class BatchSaveServiceImpl implements BatchSaveService {
 
     @Autowired

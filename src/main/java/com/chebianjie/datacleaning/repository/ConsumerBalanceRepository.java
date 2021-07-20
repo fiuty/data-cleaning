@@ -20,4 +20,6 @@ public interface ConsumerBalanceRepository extends JpaRepository<ConsumerBalance
 
     ConsumerBalance findOneByConsumerIdAndBalanceType(long consumerId, BalanceType balanceType);
 
+    List<ConsumerBalance> findAllByUnionAccountIn(List<String> unionAccounts);
+
 }

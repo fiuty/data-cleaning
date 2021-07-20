@@ -7,6 +7,7 @@ import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.constants.RabbitMqConstants;
 import com.chebianjie.datacleaning.domain.*;
 import com.chebianjie.datacleaning.domain.enums.*;
+import com.chebianjie.datacleaning.dto.FirstBillBatchMessage;
 import com.chebianjie.datacleaning.repository.*;
 import com.chebianjie.datacleaning.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author zhengdayue
@@ -75,16 +77,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private ConsumerBillSaveService consumerBillSaveService;
-
-    @Autowired
-    private ConsumerBillDetailSaveService consumerBillDetailSaveService;
-
-    @Autowired
     private DataSynTimeService dataSynTimeService;
-
-    @Autowired
-    private FlowLogService flowLogService;
 
     @Autowired
     private BatchSaveService batchSaveService;
@@ -92,9 +85,27 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Override
     public void cleanOne(int pageNumber, int pageSize) {
         List<Consumer> consumers = consumerService.findAllByPage(pageNumber * pageSize, pageSize);
-        for (Consumer consumer : consumers) {
-            rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, consumer.getId());
-        }
+        List<Long> consumerIds = consumers.stream().map(Consumer::getId).collect(Collectors.toList());
+        //每次发送100个用户
+        List<List<Long>> collections = splitList(consumerIds, 100);
+        collections.forEach(item->{
+            FirstBillBatchMessage firstBillBatchMessage = new FirstBillBatchMessage();
+            firstBillBatchMessage.setIds(item);
+            rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, firstBillBatchMessage);
+        });
+    }
+
+    /**
+     * 对集合进行切割,按照入参size进行切割
+     *
+     * @param lists 待切割集合
+     * @param size  切割大小
+     * @param <T>   泛型T
+     * @return 切割完后的集合
+     */
+    public static <T> List<List<T>> splitList(Collection<T> lists, int size) {
+        int splitSize = (lists.size() + size - 1) / size;
+        return Stream.iterate(0, n -> n + 1).limit(splitSize).parallel().map(index -> lists.stream().skip(index * size).limit(size).parallel().collect(Collectors.toList())).collect(Collectors.toList());
     }
 
     @Override
@@ -109,95 +120,115 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     }
 
     @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_FIRST_BILL_QUEUE, containerFactory = "multiListenerContainer")
-    public void threadClean(Long id, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
-        Consumer consumer = consumerService.findById(id);
+    public void threadClean(FirstBillBatchMessage message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
+        //批量查出100个用户
+        List<Consumer> consumers = consumerService.findAllByIdIn(message.getIds());
+        List<String> consumerUnionAccounts = consumers.stream().map(Consumer::getUnionAccount).collect(Collectors.toList());
+        Map<String, Boolean> repeatCleanMap = billLogService.batchRepeatClean(consumerUnionAccounts);
+        List<ConsumerLog> consumerLogs = consumerLogService.findAllByConsumerIdInAndType(message.getIds(), 1);
+        Map<Long, ConsumerLog> consumerLogMap = consumerLogs.stream().collect(Collectors.toMap(ConsumerLog::getConsumerId, Function.identity()));
+        Map<String, List<ConsumerBalance>> consumerBalanceMap = consumerBalanceService.batchFindByUnionAccount(consumerUnionAccounts);
         try {
-            //过滤重复清洗
-            Boolean repeatClean = billLogService.repeatClean(consumer.getUnionAccount());
-            if (Objects.equals(repeatClean, true)) {
-                channel.basicAck(tag, false);
-                return;
-            }
-            ConsumerLog consumerLog = consumerLogService.findOneByConsumerId(consumer.getId(),1);
-            if (consumerLog == null) {
-                log.error("用户查询不到迁移log,consumerId:{}", consumer.getId());
-                billLogService.save(consumer.getUnionAccount(), 0);
-                throw new InvalidParameterException("用户查询不到迁移log");
-            }
-            List<ConsumerBalance> consumerBalances = consumerBalanceService.findByUnionAccount(consumer.getUnionAccount());
-            if (CollectUtil.collectionIsEmpty(consumerBalances)) {
-                log.error("用户余额为空,consumerId:{}", consumer.getId());
-                billLogService.save(consumer.getUnionAccount(), 0);
-                throw new InvalidParameterException("用户余额为空");
-            }
-            List<UtUserTotalFlow> flows = new ArrayList<>(16);
-            if (consumerLog.getCbjId() != null) {
-                List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByUid(consumerLog.getCbjId());
-                if (CollectUtil.collectionNotEmpty(cbjFlows)) {
-                    cbjFlows.forEach(cbjFlow -> cbjFlow.setPlatform(Platform.CHEBIANJIE));
-                    flows.addAll(cbjFlows);
-                }
-                cbjFlows = null;
-            }
-            if (consumerLog.getChjId() != null) {
-                List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByUid(consumerLog.getChjId());
-                if (CollectUtil.collectionNotEmpty(chjFlows)) {
-                    chjFlows.forEach(chjFlow -> chjFlow.setPlatform(Platform.CHEHUIJIE));
-                    flows.addAll(chjFlows);
-                }
-                chjFlows = null;
-            }
-            if (CollectUtil.collectionIsEmpty(flows)) {
-                //log.error("用户无流水,consumerId：{}", consumer.getId());
-                billLogService.save(consumer.getUnionAccount(), 1);
-                //用户无流水
-                channel.basicAck(tag, false);
-                return;
-            }
-            //部分时间从秒转毫秒
-            flows.forEach(item -> {
-                if (isSencond(item.getCreateTime())) {
-                    item.setCreateTime(item.getCreateTime() * 1000);
-                }
-            });
-            flows.sort(Comparator.comparing(UtUserTotalFlow::getCreateTime).reversed());
-            Map<BalanceType, ConsumerBalance> balanceMap = consumerBalances.stream().collect(Collectors.toMap(ConsumerBalance::getBalanceType, Function.identity()));
-            Integer consumerBalance = getBalance(balanceMap.get(BalanceType.REAL_BALANCE));
-            Integer consumerGiveBalance = getBalance(balanceMap.get(BalanceType.GIVE_BALANCE));
-            updateConsumerBalance(consumer.getUnionAccount(), BalanceType.REAL_BALANCE, consumerBalance);
-            updateConsumerBalance(consumer.getUnionAccount(), BalanceType.GIVE_BALANCE, consumerGiveBalance);
-            List<ConsumerBill> consumerBills = new ArrayList<>(flows.size());
-            List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(flows.size() * 2);
-            List<FlowLog> flowLogs = new ArrayList<>(flows.size());
-            for (UtUserTotalFlow currentFlow : flows) {
-                if (currentFlow.getAgentId() != null) {
-                    log.info("大客户流水,跳过flow：{}", currentFlow);
+            List<ConsumerBill> batchConsumerBills = new ArrayList<>(5000);
+            List<ConsumerBillChangeDetail> batchConsumerBillChangeDetails = new ArrayList<>(10000);
+            List<FlowLog> batchFlowLogs = new ArrayList<>(5000);
+            //Instant now1 = Instant.now();
+            for (Consumer consumer : consumers) {
+                //过滤重复清洗
+                Boolean repeatClean = repeatCleanMap.get(consumer.getUnionAccount());
+                if (Objects.equals(repeatClean, true)) {
+                    //channel.basicAck(tag, false);
+                    //return;
                     continue;
                 }
-                //清洗流水
-                ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
-                List<ConsumerBillChangeDetail> consumerBillChangeDetailTemps = handleBillDetail(consumerBill, currentFlow);
-                FlowLog flowLog = new FlowLog(currentFlow.getId(), consumerBill.getPlatform(), 1);
-                consumerBills.add(consumerBill);
-                if (CollectUtil.collectionNotEmpty(consumerBillChangeDetailTemps)) {
-                    consumerBillChangeDetails.addAll(consumerBillChangeDetailTemps);
+                ConsumerLog consumerLog = consumerLogMap.get(consumer.getId());
+                if (consumerLog == null) {
+                    log.error("用户查询不到迁移log,consumerId:{}", consumer.getId());
+                    billLogService.save(consumer.getUnionAccount(), 0);
+                    throw new InvalidParameterException("用户查询不到迁移log");
                 }
-                flowLogs.add(flowLog);
+                List<ConsumerBalance> consumerBalances = consumerBalanceMap.get(consumer.getUnionAccount());
+                if (CollectUtil.collectionIsEmpty(consumerBalances)) {
+                    log.error("用户余额为空,consumerId:{}", consumer.getId());
+                    billLogService.save(consumer.getUnionAccount(), 0);
+                    throw new InvalidParameterException("用户余额为空");
+                }
+                List<UtUserTotalFlow> flows = new ArrayList<>(16);
+                if (consumerLog.getCbjId() != null) {
+                    List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByUid(consumerLog.getCbjId());
+                    if (CollectUtil.collectionNotEmpty(cbjFlows)) {
+                        cbjFlows.forEach(cbjFlow -> cbjFlow.setPlatform(Platform.CHEBIANJIE));
+                        flows.addAll(cbjFlows);
+                    }
+                }
+                if (consumerLog.getChjId() != null) {
+                    List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByUid(consumerLog.getChjId());
+                    if (CollectUtil.collectionNotEmpty(chjFlows)) {
+                        chjFlows.forEach(chjFlow -> chjFlow.setPlatform(Platform.CHEHUIJIE));
+                        flows.addAll(chjFlows);
+                    }
+                }
+                if (CollectUtil.collectionIsEmpty(flows)) {
+                    //log.error("用户无流水,consumerId：{}", consumer.getId());
+                    billLogService.save(consumer.getUnionAccount(), 1);
+                    //用户无流水
+                    //channel.basicAck(tag, false);
+                    //return;
+                    continue;
+                }
+                //部分时间从秒转毫秒
+                flows.forEach(item -> {
+                    if (isSencond(item.getCreateTime())) {
+                        item.setCreateTime(item.getCreateTime() * 1000);
+                    }
+                });
+                flows.sort(Comparator.comparing(UtUserTotalFlow::getCreateTime).reversed());
+                Map<BalanceType, ConsumerBalance> balanceMap = consumerBalances.stream().collect(Collectors.toMap(ConsumerBalance::getBalanceType, Function.identity()));
+                Integer consumerBalance = getBalance(balanceMap.get(BalanceType.REAL_BALANCE));
+                Integer consumerGiveBalance = getBalance(balanceMap.get(BalanceType.GIVE_BALANCE));
+                updateConsumerBalance(consumer.getUnionAccount(), BalanceType.REAL_BALANCE, consumerBalance);
+                updateConsumerBalance(consumer.getUnionAccount(), BalanceType.GIVE_BALANCE, consumerGiveBalance);
+                List<ConsumerBill> consumerBills = new ArrayList<>(flows.size());
+                List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(flows.size() * 2);
+                List<FlowLog> flowLogs = new ArrayList<>(flows.size());
+                for (UtUserTotalFlow currentFlow : flows) {
+                    if (currentFlow.getAgentId() != null) {
+                        //log.info("大客户流水,跳过flow：{}", currentFlow);
+                        continue;
+                    }
+                    //清洗流水
+                    ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
+                    List<ConsumerBillChangeDetail> consumerBillChangeDetailTemps = handleBillDetail(consumerBill, currentFlow);
+                    FlowLog flowLog = new FlowLog(currentFlow.getId(), consumerBill.getPlatform(), 1);
+                    consumerBills.add(consumerBill);
+                    if (CollectUtil.collectionNotEmpty(consumerBillChangeDetailTemps)) {
+                        consumerBillChangeDetails.addAll(consumerBillChangeDetailTemps);
+                    }
+                    flowLogs.add(flowLog);
+                }
+                batchConsumerBills.addAll(consumerBills);
+                batchConsumerBillChangeDetails.addAll(consumerBillChangeDetails);
+                batchFlowLogs.addAll(flowLogs);
             }
-            batchSaveService.firstBatchSaveAll(consumerBills, consumerBillChangeDetails, flowLogs);
-            billLogService.save(consumer.getUnionAccount(), 1);
-            flows = null;
+            //Instant end1 = Instant.now();
+            //log.info("清洗步骤1：{}s", Duration.between(now1, end1).toMillis()/1000);
+            //Instant now2 = Instant.now();
+            batchSaveService.firstBatchSaveAll(batchConsumerBills, batchConsumerBillChangeDetails, batchFlowLogs);
+            billLogService.saveAll(consumerUnionAccounts, 1);
+            //Instant end2 = Instant.now();
+            //log.info("清洗步骤2：{}s", Duration.between(now2, end2).toMillis()/1000);
+            //log.info("清洗步骤3,总时间：{}s",Duration.between(now1,end2).toMillis()/1000);
             channel.basicAck(tag, false);
         } catch (Exception e) {
-            log.error("清洗流水异常，用户id:{}，erromessage:{}", id, e.getMessage());
-            billLogService.save(consumer.getUnionAccount(), 0);
+            log.error("清洗流水异常，用户id集:{}，erromessage:{}", message.getIds().toArray(), e.getMessage());
+            billLogService.saveAll(consumerUnionAccounts, 0);
             channel.basicReject(tag, false);
         }
     }
 
     private void updateConsumerBalance(String unionAccount, BalanceType balanceType, Integer value) {
         //account+balanceType用户余额、赠送余额
-        redisTemplate.opsForValue().set(unionAccount + balanceType, NumberUtil.toString(NumberUtil.getIfNull(value)), 1, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(unionAccount + balanceType, NumberUtil.toString(NumberUtil.getIfNull(value)), 10, TimeUnit.SECONDS);
     }
 
     private Integer getConsumerBalance(String unionAccount, BalanceType balanceType) {

@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>, JpaSpecificationExecutor<ConsumerLog> {
 
@@ -26,4 +28,6 @@ public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>,
     ConsumerLog findOneByChjAccountAndStatusAndType(String phone, int status, int type);
 
     ConsumerLog findOneByConsumerIdAndType(Long consumerId,Integer type);
+
+    List<ConsumerLog> findAllByConsumerIdInAndType(List<Long> consumerIds, int type);
 }

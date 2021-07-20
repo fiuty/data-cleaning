@@ -25,6 +25,8 @@ public interface ConsumerService {
 
     Consumer findById(Long id);
 
+    List<Consumer> findAllByIdIn(List<Long> ids);
+
     Consumer getByConsumerLog(ConsumerLog consumerLog);
 
     Long findTotalCount();

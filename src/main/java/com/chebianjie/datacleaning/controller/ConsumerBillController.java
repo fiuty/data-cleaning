@@ -42,6 +42,15 @@ public class ConsumerBillController {
             consumerBillService.cleanOne(pageNumber, pageSize);
             Instant end = Instant.now();
             log.info("用户流水清洗,总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
+            if (pageNumber != 0 && pageNumber % 100 == 0) {
+                //每10万用户休息5分钟
+                try {
+                    log.info("休息3分钟,当前页：{}", pageNumber);
+                    Thread.sleep(3 * 60 * 1000);
+                } catch (InterruptedException e) {
+                    log.error("线程中断e", e);
+                }
+            }
         }
         Instant totalEnd = Instant.now();
         log.info("用户流水清洗,总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());

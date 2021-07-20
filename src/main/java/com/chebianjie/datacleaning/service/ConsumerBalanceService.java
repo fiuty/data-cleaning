@@ -6,6 +6,7 @@ import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.domain.enums.BalanceType;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ConsumerBalanceService {
 
@@ -16,4 +17,6 @@ public interface ConsumerBalanceService {
     ConsumerBalance getByConsumerIdAndBalanceType(long consumerId, BalanceType balanceType);
 
     void  save(ConsumerBalance consumerBalance);
+
+    Map<String, List<ConsumerBalance>> batchFindByUnionAccount(List<String> unionAccounts);
 }

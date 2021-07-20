@@ -1,6 +1,5 @@
 package com.chebianjie.datacleaning.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.domain.Consumer;
@@ -8,17 +7,16 @@ import com.chebianjie.datacleaning.domain.ConsumerBalance;
 import com.chebianjie.datacleaning.domain.ConsumerLog;
 import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.domain.enums.BalanceType;
-import com.chebianjie.datacleaning.repository.ConsumerBalanceRepository;
-import com.chebianjie.datacleaning.repository.ConsumerLogRepository;
-import com.chebianjie.datacleaning.repository.ConsumerRepository;
 import com.chebianjie.datacleaning.service.ConsumerBalanceService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -128,5 +126,11 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
                 break;
         }
         return rst;
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public Map<String, List<ConsumerBalance>> batchFindByUnionAccount(List<String> unionAccounts) {
+        return consumerBalanceRepository.findAllByUnionAccountIn(unionAccounts).stream().collect(Collectors.groupingBy(ConsumerBalance::getUnionAccount));
     }
 }
