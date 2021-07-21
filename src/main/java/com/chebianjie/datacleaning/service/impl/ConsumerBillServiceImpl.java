@@ -170,7 +170,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                 }
                 if (CollectUtil.collectionIsEmpty(flows)) {
                     //log.error("用户无流水,consumerId：{}", consumer.getId());
-                    billLogService.save(consumer.getUnionAccount(), 1);
+                    //billLogService.save(consumer.getUnionAccount(), 1);
                     //用户无流水
                     //channel.basicAck(tag, false);
                     //return;
