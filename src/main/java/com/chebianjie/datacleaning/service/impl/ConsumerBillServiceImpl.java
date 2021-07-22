@@ -641,10 +641,11 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void handleFail() {
         List<BillLog> billLogs = billLogService.findByStatus(0);
-        billLogs.forEach(billLog -> {
-            Consumer consumer = consumerService.findByUnionAccount(billLog.getUnionAccount());
-            rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, consumer.getId());
-        });
+        List<String> unionAccounts = billLogs.stream().map(BillLog::getUnionAccount).collect(Collectors.toList());
+        List<Long> ids = consumerService.findByUnionAccountIn(unionAccounts).stream().map(Consumer::getId).collect(Collectors.toList());
+        FirstBillBatchMessage firstBillBatchMessage = new FirstBillBatchMessage();
+        firstBillBatchMessage.setIds(ids);
+        rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, firstBillBatchMessage);
         billLogService.deleteAll(billLogs);
     }
 }

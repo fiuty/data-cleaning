@@ -34,4 +34,6 @@ public interface ConsumerRepository extends JpaRepository<Consumer, Long>, JpaSp
 
     Consumer findByUnionAccount(String unionAccount);
 
+    List<Consumer> findAllByUnionAccountIn(List<String> unionAccounts);
+
 }

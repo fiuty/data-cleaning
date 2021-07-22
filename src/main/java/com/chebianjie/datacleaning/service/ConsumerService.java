@@ -36,4 +36,6 @@ public interface ConsumerService {
     Consumer findByPhone(String phone);
 
     Consumer findByUnionAccount(String unionAccount);
+
+    List<Consumer> findByUnionAccountIn(List<String> unionAccounts);
 }

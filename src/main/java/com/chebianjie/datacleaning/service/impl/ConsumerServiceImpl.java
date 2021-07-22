@@ -225,4 +225,11 @@ public class ConsumerServiceImpl extends AbstractBaseServiceImpl implements Cons
     public Consumer findByUnionAccount(String unionAccount) {
         return consumerRepository.findByUnionAccount(unionAccount);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<Consumer> findByUnionAccountIn(List<String> unionAccounts) {
+        return consumerRepository.findAllByUnionAccountIn(unionAccounts);
+    }
+
 }
