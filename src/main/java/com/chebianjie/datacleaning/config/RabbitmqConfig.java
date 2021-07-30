@@ -156,5 +156,21 @@ public class RabbitmqConfig {
     public Binding firstStaffLogBinding() {
         return BindingBuilder.bind(firstStaffLogQueue()).to(firstStaffLogExchange()).with(RabbitMqConstants.DATA_CLEAN_FIRST_STAFF_LOG_ROUTING_KEY);
     }
+
+    //监听流水
+    @Bean
+    public Queue flowQueue() {
+        return new Queue(RabbitMqConstants.DATA_CLEAN_FLOW_QUEUE);
+    }
+
+    @Bean
+    public DirectExchange flowDirectExchange() {
+        return new DirectExchange(RabbitMqConstants.DATA_CLEAN_FLOW_EXCHANGE, true, true);
+    }
+
+    @Bean
+    public Binding flowBinding() {
+        return BindingBuilder.bind(flowQueue()).to(flowDirectExchange()).with(RabbitMqConstants.DATA_CLEAN_FLOW_ROUTING_KEY);
+    }
 }
 

@@ -2,6 +2,7 @@ package com.chebianjie.datacleaning.controller;
 
 import com.chebianjie.datacleaning.service.ConsumerBillService;
 import com.chebianjie.datacleaning.service.UtStaffLogService;
+import com.chebianjie.datacleaning.service.UtUserTotalFlowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,9 @@ public class JobController {
     @Autowired
     private UtStaffLogService utStaffLogService;
 
+    @Autowired
+    private UtUserTotalFlowService utUserTotalFlowService;
+
     @GetMapping("/consumerBill/job")
     public void consumerBillJob() {
         consumerBillService.consumerBillJob();
@@ -29,5 +33,10 @@ public class JobController {
     @GetMapping("/utstaffLog/job")
     public void utstaffLogJob() {
         utStaffLogService.utstaffLogJob();
+    }
+
+    @GetMapping("/utUserTotalFlow/job")
+    public void utUserTotalFlowJob() {
+        utUserTotalFlowService.utUserTotalFlowJob();
     }
 }

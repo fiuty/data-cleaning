@@ -132,7 +132,7 @@ public class UtStaffLogServiceImpl implements UtStaffLogService {
         }
         dataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTimeService.updateDataSynTime(dataSynTime);
-        log.info("同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
+        log.info("同步增量,车便捷员工业绩增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
     }
 
     @Override

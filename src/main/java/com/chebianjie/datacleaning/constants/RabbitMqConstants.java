@@ -29,5 +29,12 @@ public class RabbitMqConstants {
 
     public static final String DATA_CLEAN_FIRST_STAFF_LOG_ROUTING_KEY = "data.clean.first.staff.log.routing.key";
 
+    //流水监听
+    public static final String DATA_CLEAN_FLOW_QUEUE = "data.clean.flow.queue";
+
+    public static final String DATA_CLEAN_FLOW_EXCHANGE = "data.clean.flow.exchange";
+
+    public static final String DATA_CLEAN_FLOW_ROUTING_KEY = "data.clean.flow.routing.key";
+
 
 }

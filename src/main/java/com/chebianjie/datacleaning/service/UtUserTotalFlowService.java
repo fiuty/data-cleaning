@@ -22,6 +22,9 @@ public interface UtUserTotalFlowService {
 
     List<UtUserTotalFlow> chjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize);
 
-
+    /**
+     * 流水增量
+     */
+    void utUserTotalFlowJob();
 
 }
