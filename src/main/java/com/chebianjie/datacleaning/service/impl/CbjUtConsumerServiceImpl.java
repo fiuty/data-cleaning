@@ -61,4 +61,10 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     public List<UtConsumer> findAllByPage(int pageNumber, int pageSize) {
         return utConsumerRepository.findAllByPage(pageNumber, pageSize);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public int countByUnionidAndStatue(String unionid, int statue) {
+        return utConsumerRepository.countByUnionidAndStatue(unionid, statue);
+    }
 }

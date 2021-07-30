@@ -6,6 +6,7 @@ import com.chebianjie.datacleaning.domain.enums.BalanceType;
 import com.chebianjie.datacleaning.repository.UtConsumerRepository;
 import com.chebianjie.datacleaning.service.*;
 import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +15,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-public abstract class AbstractBaseController {
+@Slf4j
+public class AbstractBaseController {
 
     @Autowired
     protected CbjUtConsumerService cbjUtConsumerService;
@@ -37,35 +39,56 @@ public abstract class AbstractBaseController {
     @Autowired
     protected UtCouponUserService utCouponUserService;
 
+    @Autowired
+    protected UtConsumerBakService utConsumerBakService;
+
     /**
-     * 处理同一unionid多条数据情况
-     * @param utConsumer
+     * 检测旧ut_consumer是否为脏数据
+     * @param utConsumer 旧用户
+     * @param type 1:车便捷 2:车惠捷
+     * @return boolean
+     */
+    protected boolean checkUtConsumer(UtConsumer utConsumer, int type){
+        boolean rst = false;
+        //unionid为null或空字符串 / jhi_account为空 / jhi_account不等于phone / jhi_account = 13535652960 余额负数跳过
+        if(StrUtil.isNotBlank(utConsumer.getAccount()) && StrUtil.isNotBlank(utConsumer.getPhone()) && StrUtil.isNotBlank(utConsumer.getUnionid()) && utConsumer.getAccount().equals(utConsumer.getPhone()) && !utConsumer.getAccount().equals("13535652960")){
+            //判断同一unionid是否有多条数据
+            int count = type == 1 ? cbjUtConsumerService.countByUnionidAndStatue(utConsumer.getUnionid(), 1) : chjUtConsumerService.countByUnionidAndStatue(utConsumer.getUnionid(), 1);
+            if(count == 1) {
+                rst = true;
+            }
+        }
+        return rst;
+    }
+
+    /**
+     * 处理同一jhi_account多条数据情况
+     * @param utConsumer 旧用户
      * @param type 1:车便捷 2:车惠捷
      * @return
      */
         protected UtConsumer fixUtConsumerByAccount(UtConsumer utConsumer, int type){
-        if(StrUtil.isNotBlank(utConsumer.getUnionid())) {
             List<UtConsumer> utConsumerList = new ArrayList<>();
             if(type == 1){
-                utConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(utConsumer.getUnionid());
+                utConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(utConsumer.getAccount());
             }else if(type == 2){
-                utConsumerList = chjUtConsumerService.getUtConsumerListByAccount(utConsumer.getUnionid());
+                utConsumerList = chjUtConsumerService.getUtConsumerListByAccount(utConsumer.getAccount());
             }
             if(utConsumerList.size() > 1){
                 //整合所有数据
+                log.info("[整合数据-1] account: {}", utConsumer.getAccount());
                 utConsumer =  utConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
                 utConsumer.setBalance(utConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
                 utConsumer.setGiveBalance(utConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
                 utConsumer.setConsumptionAmount(utConsumerList.stream().filter(e -> e.getConsumptionAmount() != null).mapToInt(UtConsumer::getConsumptionAmount).sum());
                 utConsumer.setOrderNum(utConsumerList.stream().filter(e -> e.getOrderNum() != null).mapToLong(UtConsumer::getOrderNum).sum());
             }
-        }
         return utConsumer;
     }
 
     /**
      * 根据车便捷用户获取车惠捷用户
-     * @param cbjUtConsumer
+     * @param cbjUtConsumer 车便捷旧用户
      * @return UtConsumer
      */
     protected UtConsumer getChjUtConsumerByCbjUtConsumer(UtConsumer cbjUtConsumer){
@@ -76,6 +99,7 @@ public abstract class AbstractBaseController {
         //整合list
         if(chjUtConsumerList.size() > 1){
             //整合所有数据
+            log.info("[整合数据-2] account: {}", cbjUtConsumer.getAccount());
             rst = chjUtConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
             rst.setBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
             rst.setGiveBalance(chjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());
@@ -89,8 +113,8 @@ public abstract class AbstractBaseController {
 
     /**
      * 根据车惠捷用户获取车便捷用户
-     * @param chjUtConsumer
-     * @return
+     * @param chjUtConsumer 车惠捷旧用户
+     * @return UtConsumer
      */
     protected UtConsumer getCbjUtConsumerByChjUtConsumer(UtConsumer chjUtConsumer){
         UtConsumer rst = null;
@@ -100,6 +124,7 @@ public abstract class AbstractBaseController {
         //整合list
         if(cbjUtConsumerList.size() > 1){
             //整合所有数据
+            log.info("[整合数据-3] account: {}", chjUtConsumer.getAccount());
             rst = cbjUtConsumerList.stream().max(Comparator.comparing(UtConsumer::getLastlogintime)).get();
             rst.setBalance(cbjUtConsumerList.stream().mapToInt(UtConsumer::getBalance).sum());
             rst.setGiveBalance(cbjUtConsumerList.stream().mapToInt(UtConsumer::getGiveBalance).sum());

@@ -74,4 +74,10 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
     public List<UtConsumer> findAllByPage(int pageNumber, int pageSize) {
         return utConsumerRepository.findAllByPage(pageNumber,pageSize);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public int countByUnionidAndStatue(String unionid, int statue) {
+        return utConsumerRepository.countByUnionidAndStatue(unionid, statue);
+    }
 }

@@ -3,8 +3,10 @@ package com.chebianjie.datacleaning.controller;
 import com.chebianjie.datacleaning.config.DataCleanConfiguration;
 import com.chebianjie.datacleaning.domain.Consumer;
 import com.chebianjie.datacleaning.domain.UtConsumer;
+import com.chebianjie.datacleaning.domain.UtConsumerBak;
 import com.chebianjie.datacleaning.threads.ConsumerTask;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.transaction.annotation.Propagation;
@@ -46,14 +48,25 @@ public class ConsumerController extends AbstractBaseController{
             Instant now = Instant.now();
             List<UtConsumer> utConsumers = cbjUtConsumerService.findAllByPage(pageNumber * pageSize, pageSize);
             utConsumers.forEach(curCbjUtConsumer ->{
-                //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
-                curCbjUtConsumer = fixUtConsumerByAccount(curCbjUtConsumer, 1);
-                //4.获取与当前车便捷用户对应的车惠捷用户
-                UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
-                //5.检查是否已经清洗
-                if(!checkCleanConsumer(curCbjUtConsumer, 1)){
-                    //6.处理数据
-                    es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
+                //判断是否为脏数据
+                if(checkUtConsumer(curCbjUtConsumer, 1)) {
+                    //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                    curCbjUtConsumer = fixUtConsumerByAccount(curCbjUtConsumer, 1);
+                    //获取与当前车便捷用户对应的车惠捷用户
+                    UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
+                    //检查是否已经清洗
+                    if (!checkCleanConsumer(curCbjUtConsumer, 1)) {
+                        //6.处理数据
+                        es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
+                    }
+                }else{
+                    //脏数据转移备份表
+                    UtConsumerBak temp = new UtConsumerBak();
+                    BeanUtils.copyProperties(curCbjUtConsumer, temp);
+                    temp.setId(null);
+                    temp.setPlatform(1);
+                    utConsumerBakService.save(temp);
+                    log.info("[CBJ 脏数据] INSERT");
                 }
             });
             Instant end = Instant.now();
@@ -84,16 +97,27 @@ public class ConsumerController extends AbstractBaseController{
             Instant now = Instant.now();
             List<UtConsumer> utConsumers = chjUtConsumerService.findAllByPage(pageNumber * pageSize, pageSize);
             utConsumers.forEach(curChjUtConsumer->{
-                //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
-                curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
-                //4.获取与当前车便捷用户对应的车惠捷用户
-                UtConsumer cbjUtConsumer = getCbjUtConsumerByChjUtConsumer(curChjUtConsumer);
-                //5.检查是否已经清洗
-                if(!checkCleanConsumer(curChjUtConsumer, 2)){
-                    //6.处理数据
-                    es.submit(new ConsumerTask(consumerService, consumerBalanceService, cbjUtConsumer, curChjUtConsumer));
+                //判断是否为脏数据
+                if(checkUtConsumer(curChjUtConsumer, 1)) {
+                    //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                    curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
+                    //获取与当前车便捷用户对应的车惠捷用户
+                    UtConsumer cbjUtConsumer = getCbjUtConsumerByChjUtConsumer(curChjUtConsumer);
+                    //检查是否已经清洗
+                    if (!checkCleanConsumer(curChjUtConsumer, 2)) {
+                        //处理数据
+                        es.submit(new ConsumerTask(consumerService, consumerBalanceService, cbjUtConsumer, curChjUtConsumer));
+                    } else {
+                        log.info("[CHJ SYNC] EXIST");
+                    }
                 }else{
-                    log.info("[CHJ SYNC] EXIST");
+                    //脏数据转移备份表
+                    UtConsumerBak temp = new UtConsumerBak();
+                    BeanUtils.copyProperties(curChjUtConsumer, temp);
+                    temp.setId(null);
+                    temp.setPlatform(2);
+                    utConsumerBakService.save(temp);
+                    log.info("[CHJ 脏数据] INSERT");
                 }
             });
             Instant end = Instant.now();
@@ -109,15 +133,15 @@ public class ConsumerController extends AbstractBaseController{
     @GetMapping("/test")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Object syncTest(@RequestParam("id") long id, @RequestParam("type") int type){
-        //1.获取车便捷用户
+        //获取车便捷用户
         UtConsumer utConsumer =  type == 1 ? cbjUtConsumerService.getUtConsumerById(id) : chjUtConsumerService.getUtConsumerById(id);
-        //3.针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+        //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
         utConsumer = fixUtConsumerByAccount(utConsumer, type);
-        //4.获取与当前用户数据对应的另一用户数据
+        //获取与当前用户数据对应的另一用户数据
         UtConsumer fixUtConsumer = type == 1 ? getChjUtConsumerByCbjUtConsumer(utConsumer) : getCbjUtConsumerByChjUtConsumer(utConsumer);
-        //5.检查是否已经清洗
+        //检查是否已经清洗
         if(!checkCleanConsumer(utConsumer, type)){
-            //3.处理数据
+            //处理数据
             Consumer consumer = type == 1 ? consumerService.mergeConsumer(utConsumer, fixUtConsumer) : consumerService.mergeConsumer(fixUtConsumer, utConsumer);
             if(consumer != null){
                 //迁移用户余额
