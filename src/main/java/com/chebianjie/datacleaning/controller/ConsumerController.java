@@ -98,7 +98,7 @@ public class ConsumerController extends AbstractBaseController{
             List<UtConsumer> utConsumers = chjUtConsumerService.findAllByPage(pageNumber * pageSize, pageSize);
             utConsumers.forEach(curChjUtConsumer->{
                 //判断是否为脏数据
-                if(checkUtConsumer(curChjUtConsumer, 1)) {
+                if(checkUtConsumer(curChjUtConsumer, 2)) {
                     //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
                     curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
                     //获取与当前车便捷用户对应的车惠捷用户
