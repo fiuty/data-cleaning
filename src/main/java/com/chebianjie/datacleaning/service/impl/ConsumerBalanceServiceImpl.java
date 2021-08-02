@@ -67,7 +67,7 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public List<ConsumerBalance> findByUnionAccount(String unionAccount) {
+    public List<ConsumerBalance>  findByUnionAccount(String unionAccount) {
         return consumerBalanceRepository.findByUnionAccount(unionAccount);
     }
 

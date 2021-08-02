@@ -47,6 +47,33 @@ public enum DataSourcesType {
     /**
      * 车惠捷staff
      */
-    CHJ_STAFF;
+    CHJ_STAFF,
+
+    /**
+     * 车便捷agent
+     */
+    CBJ_AGENT,
+
+    /**
+     * 车惠捷agent
+     */
+    CHJ_AGENT,
+    /**
+     * 车便捷carserver
+     */
+    CBJ_CAR_SERVER,
+    /**
+     * 车惠捷carserver
+     */
+    CHJ_CAR_SERVER,
+    /**
+     * 车便捷cbjreport
+     */
+    CBJ_REPORT,
+    /**
+     * 车惠捷cbjreport
+     */
+    CHJ_REPORT;
+
 
 }

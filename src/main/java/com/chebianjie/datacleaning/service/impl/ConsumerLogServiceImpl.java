@@ -113,4 +113,27 @@ public class ConsumerLogServiceImpl implements ConsumerLogService {
     public List<ConsumerLog> findAllByConsumerIdInAndType(List<Long> consumerIds, int type) {
         return consumerLogRepository.findAllByConsumerIdInAndType(consumerIds, type);
     }
+
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<ConsumerLog> getCbjConsumerLogByConsumerId(Long cbjConsumerId) {
+        return consumerLogRepository.findAllByCbjIdAndStatusAndType(cbjConsumerId,1,1);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<ConsumerLog> getChjConsumerLogByConsumerId(Long chjConsumerId) {
+        return consumerLogRepository.findAllByChjIdAndStatusAndType(chjConsumerId,1,1);
+    }
+
+
+
+
+
+
+
+
+
+
 }

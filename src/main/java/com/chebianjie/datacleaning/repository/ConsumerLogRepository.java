@@ -30,4 +30,10 @@ public interface ConsumerLogRepository extends JpaRepository<ConsumerLog, Long>,
     ConsumerLog findOneByConsumerIdAndType(Long consumerId,Integer type);
 
     List<ConsumerLog> findAllByConsumerIdInAndType(List<Long> consumerIds, int type);
+
+    List<ConsumerLog> findAllByCbjIdAndStatusAndType(Long cbjConsumerId,int status,int type);
+
+    List<ConsumerLog> findAllByChjIdAndStatusAndType(Long chjConsumerId,int status,int type);
+
+
 }

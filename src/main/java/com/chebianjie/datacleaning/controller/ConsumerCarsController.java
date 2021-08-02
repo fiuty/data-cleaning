@@ -8,6 +8,8 @@ import com.chebianjie.datacleaning.repository.ConsumerCarsLogRepository;
 import com.chebianjie.datacleaning.repository.ConsumerLogRepository;
 import com.chebianjie.datacleaning.repository.ConsumerRepository;
 import com.chebianjie.datacleaning.service.*;
+import com.chebianjie.datacleaning.threads.ConsumerCarsThread;
+import com.chebianjie.datacleaning.threads.ConsumerCouponTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,6 +48,9 @@ public class ConsumerCarsController {
     @GetMapping("/sysnCbjUtUserCars")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String getCbjUtUserCars() {
+        //创建线程
+        //final ExecutorService es = Executors.newFixedThreadPool(20);
+
         int totalPage;
         int page=0;
         int size=10;
@@ -78,15 +84,18 @@ public class ConsumerCarsController {
                     if(consumer != null){
                         Long consumerId=consumer.getId();
                         unionAccount = consumer.getUnionAccount();  //消费者唯一账号
+                        //es.submit(new ConsumerCarsThread(consumerCarsService,cbjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEBIANJIE));
                         consumerCarsService.saveConsumerCars(cbjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEBIANJIE);
                         continue;
                     }
 
                     if(unionId !=null) {
+                        System.out.println("------------unionId--------------");
                         Consumer consumer2 = consumerCarsService.getConsumerByUnionid(unionId);
                         if(consumer2 != null) {
                             Long consumerId=consumer2.getId();
                             unionAccount = consumer2.getUnionAccount();  //消费者唯一账号
+                            //es.submit(new ConsumerCarsThread(consumerCarsService,cbjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEBIANJIE));
                             consumerCarsService.saveConsumerCars(cbjUtUserCars,consumerId, phone, unionAccount, unionId, Platform.CHEBIANJIE);
                             continue;
                         }
@@ -110,6 +119,7 @@ public class ConsumerCarsController {
 
             page = page +1;
         }while (page != totalPage);
+        //es.shutdown();
 
         return "end";
     }
@@ -155,6 +165,7 @@ public class ConsumerCarsController {
                     if(consumer != null){
                         Long consumerId=consumer.getId();
                         unionAccount = consumer.getUnionAccount();  //消费者唯一账号
+                        //es.submit(new ConsumerCarsThread(consumerCarsService,chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE));
                         consumerCarsService.saveConsumerCars(chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE);
                         continue;
                     }
@@ -164,6 +175,7 @@ public class ConsumerCarsController {
                         if(consumer2 != null) {
                             Long consumerId=consumer2.getId();
                             unionAccount = consumer2.getUnionAccount();  //消费者唯一账号
+                            //es.submit(new ConsumerCarsThread(consumerCarsService,chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE));
                             consumerCarsService.saveConsumerCars(chjUtUserCars,consumerId, phone, unionAccount, unionId, Platform.CHEHUIJIE);
                             continue;
                         }

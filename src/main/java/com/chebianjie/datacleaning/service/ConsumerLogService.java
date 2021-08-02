@@ -36,4 +36,13 @@ public interface ConsumerLogService {
     ConsumerLog findOneByCbjIdOrChjId(Long id, Platform platform);
 
     List<ConsumerLog> findAllByConsumerIdInAndType(List<Long> consumerIds, int type);
+
+    public List<ConsumerLog> getCbjConsumerLogByConsumerId(Long cbjConsumerId);
+
+    public List<ConsumerLog> getChjConsumerLogByConsumerId(Long chjConsumerId);
+
+
+
+
+
 }
