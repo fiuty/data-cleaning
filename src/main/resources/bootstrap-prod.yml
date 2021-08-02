@@ -1,0 +1,10 @@
+# 开发环境配置
+spring:
+  profiles:
+    active: prod
+  cloud:
+    nacos:
+      config:
+        server-addr: 172.18.120.44:8848,172.18.120.45:8848,172.18.120.46:8848,172.18.120.47:8848
+        file-extension: yaml
+        namespace: data-cleaning

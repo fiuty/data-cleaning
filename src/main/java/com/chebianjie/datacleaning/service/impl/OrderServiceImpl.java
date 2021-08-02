@@ -51,35 +51,35 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void cleaningCBJWashOrder(Long consumerId, String phone, String consumerAccount) {
         log.info("==========清洗车便捷用户id：{}，手机号：{}，唯一标识：{}========", consumerId, phone, consumerAccount);
-        // 自助洗车
-        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId.intValue());
-        if (CollectionUtil.isNotEmpty(utConsumps)) {
-            log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
-            for (UtConsump utConsump : utConsumps) {
-                utConsump.setConsumerAccount(consumerAccount);
-                utConsumpRepository.saveAndFlush(utConsump);
-            }
-        }
-
-        // 自助吸尘
-        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
-        if (CollectionUtil.isNotEmpty(dushOrders)) {
-            log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
-            for (DushOrder dushOrder : dushOrders) {
-                dushOrder.setConsumerAccount(consumerAccount);
-                dushOrderRepository.saveAndFlush(dushOrder);
-            }
-        }
-
-        // 全自动洗车
-        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
-        if (CollectionUtil.isNotEmpty(autoOrders)) {
-            log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
-            for (AutoOrder autoOrder : autoOrders) {
-                autoOrder.setConsumerAccount(consumerAccount);
-                autoOrderRepository.saveAndFlush(autoOrder);
-            }
-        }
+//        // 自助洗车
+//        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId.intValue());
+//        if (CollectionUtil.isNotEmpty(utConsumps)) {
+//            log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
+//            for (UtConsump utConsump : utConsumps) {
+//                utConsump.setConsumerAccount(consumerAccount);
+//                utConsumpRepository.saveAndFlush(utConsump);
+//            }
+//        }
+//
+//        // 自助吸尘
+//        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
+//        if (CollectionUtil.isNotEmpty(dushOrders)) {
+//            log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
+//            for (DushOrder dushOrder : dushOrders) {
+//                dushOrder.setConsumerAccount(consumerAccount);
+//                dushOrderRepository.saveAndFlush(dushOrder);
+//            }
+//        }
+//
+//        // 全自动洗车
+//        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
+//        if (CollectionUtil.isNotEmpty(autoOrders)) {
+//            log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{}", consumerId, phone, consumerAccount);
+//            for (AutoOrder autoOrder : autoOrders) {
+//                autoOrder.setConsumerAccount(consumerAccount);
+//                autoOrderRepository.saveAndFlush(autoOrder);
+//            }
+//        }
         // 充值订单
         List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utChargeLogList)) {

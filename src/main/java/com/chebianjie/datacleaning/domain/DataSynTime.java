@@ -24,7 +24,7 @@ public class DataSynTime {
     private Long lastTime;
 
     /**
-     * 同步类型:1-用户流水，2-员工业绩，6-流水增量，用户余额清洗
+     * 同步类型:1-用户流水，2-员工业绩，6-车便捷-流水增量，用户余额清洗，7-车惠捷-流水增量，用户余额清洗
      */
     private Integer synType;
 }

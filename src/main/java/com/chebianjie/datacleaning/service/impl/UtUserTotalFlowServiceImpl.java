@@ -96,7 +96,9 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
             Instant end = Instant.now();
             log.info("用户余额清洗-车便捷流水增量总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
-        int chjTotal = this.chjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
+        DataSynTime chjDataSynTime = dataSynTimeRepository.findBySynType(7);
+        Long chjTimeFrom = chjDataSynTime.getLastTime();
+        int chjTotal = this.chjCountByCreateTimeBetween(chjTimeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
             Instant now = Instant.now();

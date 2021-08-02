@@ -175,8 +175,18 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
         car.setAccidentType(item.getAccidentType());
         car.setPlatform(platform);
         car.setCarDetailId(item.getCarDetailId());
+        car.setAdress(item.getAdress());
+        car.setSeller(item.getSeller());
+        car.setLicenceTime(item.getLicenceTime());
+        car.setDriveLicensPhotos(item.getDriveLicensPhotos());
+        car.setCarContract(item.getCarContract());
+        car.setInvoiceCode(item.getInvoiceCode());
+        car.setInvoceNum(item.getInvoceNum());
+        car.setInvoceTaxNum(item.getInvoceTaxNum());
+        car.setInvocePrice(item.getInvocePrice());
+        car.setUserCarActivityType(item.getUserCarActivityType());
+        car.setUuid(item.getUuid());
         //car.setUnionAccount(item.getUnionAccount());  //消费者唯一账号
-
         return car;
     }
 

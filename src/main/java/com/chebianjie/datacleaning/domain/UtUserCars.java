@@ -1,9 +1,11 @@
 package com.chebianjie.datacleaning.domain;
 
 
+import com.chebianjie.datacleaning.domain.enums.UserCarActivityType;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ut_user_cars")
@@ -208,7 +210,61 @@ public class UtUserCars {
     @Column(name = "car_detail_id")
     private Long carDetailId;
 
+    /**
+     * 收件地址
+     */
+    private String adress;
 
+    /**
+     * 购买商家
+     */
+    private String seller;
+
+    /**
+     * 上牌时间
+     */
+    private LocalDateTime licenceTime;
+
+    /**
+     * 行驶证（多张,逗号分隔）
+     */
+    private String driveLicensPhotos;
+
+    /**
+     * 购车合同（多张,逗号分隔）
+     */
+    private String carContract;
+
+    /**
+     * 发票代码
+     */
+    private String invoiceCode;
+
+    /**
+     * 发票号码
+     */
+    private String invoceNum;
+
+    /**
+     * 发票纳税识别号
+     */
+    private String invoceTaxNum;
+
+    /**
+     * 发票金额
+     */
+    private Integer invocePrice;
+
+    /**
+     * 活动状态
+     */
+    @Enumerated(EnumType.STRING)
+    private UserCarActivityType userCarActivityType;
+
+    /**
+     * uuid
+     */
+    private String uuid;
 
 
 

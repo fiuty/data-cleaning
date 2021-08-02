@@ -71,6 +71,11 @@ public class ConsumerBillController {
         consumerBillService.deleteFail();
     }
 
+    @GetMapping("/test")
+    public void test() {
+        log.info("------------------test------------------");
+    }
+
 
     private int computeTotalPage(long total) {
         int pageSize = 1000;
