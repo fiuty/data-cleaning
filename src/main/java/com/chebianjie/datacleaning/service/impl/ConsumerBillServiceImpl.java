@@ -586,7 +586,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void consumerBillJob() {
-        DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(1);
+        DataSynTime dataSynTime = dataSynTimeService.findBySynType(1);
         Long timeFrom = dataSynTime.getLastTime();
         LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
         int pageSize = 1000;
@@ -601,7 +601,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             log.info("车便捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
 
-        DataSynTime chjDataSynTime = dataSynTimeRepository.findBySynType(3);
+        DataSynTime chjDataSynTime = dataSynTimeService.findBySynType(3);
         Long chjTimeFrom = chjDataSynTime.getLastTime();
         //车惠捷分页
         int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(chjTimeFrom, toEpochMilli(timeTo));

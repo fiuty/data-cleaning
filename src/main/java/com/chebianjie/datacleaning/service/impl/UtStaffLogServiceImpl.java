@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class UtStaffLogServiceImpl implements UtStaffLogService {
 
     @Autowired
@@ -104,9 +105,8 @@ public class UtStaffLogServiceImpl implements UtStaffLogService {
     }
 
     @Override
-    @DataSource(name = DataSourcesType.USERPLATFORM)
     public void utstaffLogJob() {
-        DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(2);
+        DataSynTime dataSynTime = dataSynTimeService.findBySynType(2);
         Long timeFrom = dataSynTime.getLastTime();
         LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
         int pageSize = 1000;
@@ -136,28 +136,24 @@ public class UtStaffLogServiceImpl implements UtStaffLogService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @DataSource(name = DataSourcesType.CBJ_STAFF)
     public int cbjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
         return utStaffLogRepository.countByCreatetimeBetween(timeFrom,timeTo);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @DataSource(name = DataSourcesType.CHJ_STAFF)
     public int chjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
         return utStaffLogRepository.countByCreatetimeBetween(timeFrom,timeTo);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @DataSource(name = DataSourcesType.CBJ_STAFF)
     public List<UtStaffLog> cbjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
         return utStaffLogRepository.findAllByCreatetimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @DataSource(name = DataSourcesType.CHJ_STAFF)
     public List<UtStaffLog> chjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
         return utStaffLogRepository.findAllByCreatetimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);

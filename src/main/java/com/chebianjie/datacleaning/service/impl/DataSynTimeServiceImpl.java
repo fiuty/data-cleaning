@@ -8,6 +8,8 @@ import com.chebianjie.datacleaning.service.DataSynTimeService;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -16,15 +18,21 @@ import java.time.LocalDateTime;
  * @date: 2021-07-05
  */
 @Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class DataSynTimeServiceImpl implements DataSynTimeService {
 
     @Autowired
     private DataSynTimeRepository dataSynTimeRepository;
 
     @Override
-    @RabbitHandler
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void updateDataSynTime(DataSynTime dataSynTime) {
         dataSynTimeRepository.save(dataSynTime);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public DataSynTime findBySynType(Integer type) {
+        return dataSynTimeRepository.findBySynType(type);
     }
 }

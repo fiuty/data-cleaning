@@ -6,9 +6,8 @@ import com.chebianjie.datacleaning.constants.RabbitMqConstants;
 import com.chebianjie.datacleaning.domain.DataSynTime;
 import com.chebianjie.datacleaning.domain.UtUserTotalFlow;
 import com.chebianjie.datacleaning.domain.enums.Platform;
-import com.chebianjie.datacleaning.repository.DataSynTimeRepository;
-import com.chebianjie.datacleaning.repository.UtUserTotalFlowRepository;
 import com.chebianjie.datacleaning.service.DataSynTimeService;
+import com.chebianjie.datacleaning.service.UtUserTotalFlowJobService;
 import com.chebianjie.datacleaning.service.UtUserTotalFlowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -22,64 +21,25 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author zhengdayue
- * @date: 2021-06-30
+ * @date: 2021-08-03
  */
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
 @Slf4j
-public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public class UtUserTotalFlowJobServiceImpl implements UtUserTotalFlowJobService {
 
-    @Autowired
-    private UtUserTotalFlowRepository utUserTotalFlowRepository;
-
-    @Autowired
-    private DataSynTimeRepository dataSynTimeRepository;
 
     @Autowired
     private DataSynTimeService dataSynTimeService;
 
     @Autowired
+    private UtUserTotalFlowService utUserTotalFlowService;
+
+    @Autowired
     private RabbitTemplate rabbitTemplate;
-
-    @Override
-    @DataSource(name = DataSourcesType.MASTER)
-    public List<UtUserTotalFlow> cbjFindAllByUid(Long cbjId) {
-        return utUserTotalFlowRepository.findAllByUid(cbjId);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public List<UtUserTotalFlow> chjFindAllByUid(Long chjId) {
-        return utUserTotalFlowRepository.findAllByUid(chjId);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.MASTER)
-    public List<UtUserTotalFlow> cbjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
-        return utUserTotalFlowRepository.findAllByCreateTimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public List<UtUserTotalFlow> chjFindAllByCreateTimeBetween(Long timeFrom, Long timeTo, int pageNumber, int pageSize) {
-        return utUserTotalFlowRepository.findAllByCreateTimeBetweenPage(timeFrom, timeTo, pageNumber * pageSize, pageSize);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.MASTER)
-    public int cbjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
-        return utUserTotalFlowRepository.countByCreateTimeBetween(timeFrom, timeTo);
-    }
-
-    @Override
-    @DataSource(name = DataSourcesType.SLAVE)
-    public int chjCountByCreateTimeBetween(Long timeFrom, Long timeTo) {
-        return utUserTotalFlowRepository.countByCreateTimeBetween(timeFrom, timeTo);
-    }
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
@@ -88,22 +48,22 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
         Long timeFrom = dataSynTime.getLastTime();
         LocalDateTime timeTo = LocalDateTime.now().minus(Duration.ofSeconds(5));
         int pageSize = 1000;
-        int cbjTotal = this.cbjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
+        int cbjTotal = utUserTotalFlowService.cbjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
         int cbjTotalPage = computeTotalPage(cbjTotal);
         for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
             Instant now = Instant.now();
-            List<UtUserTotalFlow> cbjUtUserTotalFlows = this.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
+            List<UtUserTotalFlow> cbjUtUserTotalFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             convertAndSend(cbjUtUserTotalFlows, Platform.CHEBIANJIE);
             Instant end = Instant.now();
             log.info("用户余额清洗-车便捷流水增量总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         DataSynTime chjDataSynTime = dataSynTimeService.findBySynType(7);
         Long chjTimeFrom = chjDataSynTime.getLastTime();
-        int chjTotal = this.chjCountByCreateTimeBetween(chjTimeFrom, toEpochMilli(timeTo));
+        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(chjTimeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
             Instant now = Instant.now();
-            List<UtUserTotalFlow> chjUtUserTotalFlows = this.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
+            List<UtUserTotalFlow> chjUtUserTotalFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
             convertAndSend(chjUtUserTotalFlows, Platform.CHEHUIJIE);
             Instant end = Instant.now();
             log.info("用户余额清洗-车惠捷流水增量总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
@@ -113,6 +73,10 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
         dataSynTimeService.updateDataSynTime(chjDataSynTime);
         dataSynTimeService.updateDataSynTime(dataSynTime);
         log.info("用户余额清洗-同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
+    }
+
+    private Long toEpochMilli(LocalDateTime localDateTime) {
+        return localDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli();
     }
 
     private void convertAndSend(List<UtUserTotalFlow> cbjUtUserTotalFlows, Platform platform) {
@@ -130,9 +94,5 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
             ++totalPage;
         }
         return totalPage;
-    }
-
-    private Long toEpochMilli(LocalDateTime localDateTime) {
-        return localDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli();
     }
 }

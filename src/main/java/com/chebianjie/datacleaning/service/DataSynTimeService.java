@@ -10,4 +10,6 @@ import com.chebianjie.datacleaning.domain.DataSynTime;
 public interface DataSynTimeService {
 
     void updateDataSynTime(DataSynTime dataSynTime);
+
+    DataSynTime findBySynType(Integer type);
 }
