@@ -170,7 +170,7 @@ public class AbstractBaseController {
         ConsumerLog curConsumerLog = consumerLogService.getOneByConsumerIdAndStatusAndType(curConsumer.getId(), 1, 1);
         if(type == 1) {
             //车便捷
-            if (curConsumerLog.getChjAccount().equals(utConsumer.getAccount())) {
+            if (StrUtil.isNotBlank(curConsumerLog.getChjAccount()) && curConsumerLog.getChjAccount().equals(utConsumer.getAccount())) {
                 //update consumerLog
                 curConsumerLog.setCbjId(utConsumer.getId());
                 curConsumerLog.setCbjAccount(utConsumer.getAccount());
@@ -187,7 +187,7 @@ public class AbstractBaseController {
             }
         }else if(type == 2){
             //车惠捷
-            if (curConsumerLog.getCbjAccount().equals(utConsumer.getAccount())) {
+            if (StrUtil.isNotBlank(curConsumerLog.getCbjAccount()) && curConsumerLog.getCbjAccount().equals(utConsumer.getAccount())) {
                 //update consumerLog
                 curConsumerLog.setChjId(utConsumer.getId());
                 curConsumerLog.setChjAccount(utConsumer.getAccount());
