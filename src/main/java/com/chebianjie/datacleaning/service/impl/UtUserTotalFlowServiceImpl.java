@@ -82,6 +82,7 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
     }
 
     @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public void utUserTotalFlowJob() {
         DataSynTime dataSynTime = dataSynTimeRepository.findBySynType(6);
         Long timeFrom = dataSynTime.getLastTime();

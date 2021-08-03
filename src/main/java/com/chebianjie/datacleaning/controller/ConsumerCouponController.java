@@ -55,6 +55,7 @@ public class ConsumerCouponController extends AbstractBaseController {
                     Consumer consumer = consumerService.getByConsumerLog(consumerLog);
                     // 新用户数据为空插入失败log
                     if (consumer == null) {
+                        //插入失败记录
                         ConsumerCouponLog temp = generateConsumerCouponLog(utCouponUser.getId(), 1, 0);
                         consumerCouponLogService.saveOne(temp);
                         continue;
