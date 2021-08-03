@@ -55,7 +55,7 @@ public class UtSiteRecommendController {
                 UtSiteRecommend utSiteRecommend = utSiteRecommendList.get(i);
                 Long id = utSiteRecommend.getId();
                 Long cbjId = utSiteRecommend.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null ?consumerLogService.getCbjConsumerLogByConsumerId(cbjId) : new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
@@ -96,7 +96,7 @@ public class UtSiteRecommendController {
                 UtSiteRecommend utSiteRecommend = utSiteRecommendList.get(i);
                 Long id = utSiteRecommend.getId();
                 Long chjId = utSiteRecommend.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList =chjId !=null ? consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
