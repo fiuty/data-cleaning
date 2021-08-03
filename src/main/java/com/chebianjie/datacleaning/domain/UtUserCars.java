@@ -266,6 +266,9 @@ public class UtUserCars {
      */
     private String uuid;
 
-
+    /**
+     * 用户账号
+     */
+    private String account;
 
 }

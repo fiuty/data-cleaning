@@ -73,7 +73,7 @@ public class OrderController {
         int pageSize = 1000;
         int totalPage = computeTotalPage(totalCount, pageSize);
         Instant totalStartTime = Instant.now();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < totalPage; i++) {
             totalSum++;
             List<Consumer> consumerList = consumerService.findAllByPage(i * pageSize, pageSize);
             Instant startTime = Instant.now();

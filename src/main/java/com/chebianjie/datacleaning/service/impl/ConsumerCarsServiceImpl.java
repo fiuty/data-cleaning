@@ -186,6 +186,7 @@ public class ConsumerCarsServiceImpl implements ConsumerCarsService {
         car.setInvocePrice(item.getInvocePrice());
         car.setUserCarActivityType(item.getUserCarActivityType());
         car.setUuid(item.getUuid());
+        car.setPhone(item.getAccount());
         //car.setUnionAccount(item.getUnionAccount());  //消费者唯一账号
         return car;
     }

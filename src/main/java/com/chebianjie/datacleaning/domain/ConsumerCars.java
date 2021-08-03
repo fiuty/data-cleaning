@@ -273,6 +273,7 @@ public class ConsumerCars {
      */
     private String uuid;
 
+    private String phone;
 
 
 }
