@@ -89,7 +89,7 @@ public class ConsumerBillListener {
             }
             ConsumerLog consumerLog = getConsumerLog(message);
             Consumer consumer = getConsumer(message, consumerLog);
-            ConsumerBill lastConsumerBill = consumerBillRepository.findAllByUnionAccount(consumer.getUnionAccount());
+            ConsumerBill lastConsumerBill = consumerBillService.findAllByUnionAccount(consumer.getUnionAccount());
             //第一笔流水
             if (lastConsumerBill == null) {
                 handleFirstBillBalance(consumer);
@@ -118,6 +118,7 @@ public class ConsumerBillListener {
                     flowLogs.add(flowLog);
                     addBillLogs.add(addBillLog);
                 }
+                log.debug("addBillLogs：{}", JSONUtil.toJsonStr(addBillLogs));
                 batchSaveService.addBatchSaveAll(consumerBills, consumerBillChangeDetails, addBillLogs, flowLogs);
             } else {
                 //后续流水
@@ -139,11 +140,12 @@ public class ConsumerBillListener {
                 }
                 AddBillLog addBillLog = new AddBillLog(message.getId(), consumerBill.getPlatform(), 1, null);
                 FlowLog flowLog = new FlowLog(message.getId(), consumerBill.getPlatform(), 1);
+                log.debug("addBillLogs：{}", JSONUtil.toJsonStr(addBillLog));
                 batchSaveService.addSaveAll(consumerBill,consumerBillChangeDetails,addBillLog,flowLog);
             }
             channel.basicAck(tag, false);
         } catch (Exception e) {
-            log.error("流水清洗,消息：{},处理发生异常erromessage：{}", JSONUtil.toJsonStr(message), e.getMessage());
+            log.error("流水清洗,消息：{},处理发生异常erromessage：{}", JSONUtil.toJsonStr(message), e);
             channel.basicReject(tag, false);
             try {
                 addBillLogService.save(message.getId(), message.getPlatform(), 0, JSONUtil.toJsonStr(message));

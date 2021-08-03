@@ -596,7 +596,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         for (int pageNumber = 0; pageNumber <= cbjTotalPage; pageNumber++) {
             Instant now = Instant.now();
             List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
-            cbjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+            cbjFlows.forEach(message -> {
+                message.setPlatform(Platform.CHEBIANJIE);
+                rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message);
+            });
             Instant end = Instant.now();
             log.info("车便捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
@@ -609,7 +612,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
             Instant now = Instant.now();
             List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByCreateTimeBetween(timeFrom, toEpochMilli(timeTo), pageNumber, pageSize);
-            chjFlows.forEach(message -> rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message));
+            chjFlows.forEach(message -> {
+                message.setPlatform(Platform.CHEHUIJIE);
+                rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_BILL_ROUTING_KEY, message);
+            });
             Instant end = Instant.now();
             log.info("车惠捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
@@ -651,5 +657,11 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         firstBillBatchMessage.setIds(ids);
         rabbitTemplate.convertAndSend(RabbitMqConstants.DATA_CLEAN_FIRST_BILL_EXCHANGE, RabbitMqConstants.DATA_CLEAN_FIRST_BILL_ROUTING_KEY, firstBillBatchMessage);
         billLogService.deleteAll(billLogs);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public ConsumerBill findAllByUnionAccount(String unionAccount) {
+        return consumerBillRepository.findAllByUnionAccount(unionAccount);
     }
 }

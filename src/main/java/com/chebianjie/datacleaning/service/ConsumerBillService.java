@@ -32,4 +32,6 @@ public interface ConsumerBillService {
     void cleanOneConsumer(Long id);
 
     void handleFail();
+
+    ConsumerBill findAllByUnionAccount(String unionAccount);
 }
