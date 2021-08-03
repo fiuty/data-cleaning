@@ -15,9 +15,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class UtConsumerLogController {
 
@@ -51,18 +53,18 @@ public class UtConsumerLogController {
                 UtConsumerLog utConsumerLog = utConsumerLogList.get(i);
                 Long id = utConsumerLog.getId();
                 Long cbjId = utConsumerLog.getUid();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null?consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null) {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utConsumerLogService.updateCbjUtConsumerLog(consumerUnionAccount,id);
-                        logService.saveOne(7,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(7,id,cbjId,null,consumerUnionAccount,1);
                     }
 
                 }else {
-                        logService.saveOne(7, cbjId, null, null, 0);
+                        logService.saveOne(7,id,cbjId, null, null, 0);
                 }
             }
             if (totalPage == 0) {
@@ -91,17 +93,17 @@ public class UtConsumerLogController {
                 UtConsumerLog utConsumerLog = utConsumerLogList.get(i);
                 Long id = utConsumerLog.getId();
                 Long chjId = utConsumerLog.getUid();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null?consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null) {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utConsumerLogService.updateChjUtConsumerLog(consumerUnionAccount,id);
-                        logService.saveOne(7,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(7,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(7,null,chjId,null,0);
+                        logService.saveOne(7,id,null,chjId,null,0);
                 }
             }
             if (totalPage == 0) {

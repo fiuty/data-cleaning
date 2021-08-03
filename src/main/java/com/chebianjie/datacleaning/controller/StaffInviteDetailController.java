@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class StaffInviteDetailController {
 
@@ -55,17 +57,18 @@ public class StaffInviteDetailController {
                 StaffInviteDetail staffInviteDetail = staffInviteDetailList.get(i);
                 Long id = staffInviteDetail.getId();
                 Long cbjId = staffInviteDetail.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null?consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         staffInviteDetailService.updateCbjStaffInviteDetailById(consumerUnionAccount, id);
-                        logService.saveOne(5,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(5,id,cbjId,null,consumerUnionAccount,1);
                     }
+                }else {
+                        logService.saveOne(5, id, cbjId, null, null, 0);
                 }
-                        logService.saveOne(5,cbjId,null,null,0);
             }
             if(totalPage == 0){
                 break;
@@ -94,17 +97,17 @@ public class StaffInviteDetailController {
                 StaffInviteDetail staffInviteDetail = staffInviteDetailList.get(i);
                 Long id = staffInviteDetail.getId();
                 Long chjId = staffInviteDetail.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null?consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         staffInviteDetailService.updateChjStaffInviteDetailById(consumerUnionAccount, id);
-                        logService.saveOne(5,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(5,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(5, null,chjId, null, 0);
+                        logService.saveOne(5,id, null,chjId, null, 0);
                 }
             }
             if(totalPage == 0){

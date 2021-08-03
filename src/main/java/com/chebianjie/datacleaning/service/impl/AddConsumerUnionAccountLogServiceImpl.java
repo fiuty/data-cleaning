@@ -23,9 +23,10 @@ public class AddConsumerUnionAccountLogServiceImpl implements AddConsumerUnionAc
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
-    public AddConsumerUnionAccountLog saveOne(int type,Long cbjId,Long chjId,String consumerUnionAccount,int status) {
+    public AddConsumerUnionAccountLog saveOne(int type,Long tId,Long cbjId,Long chjId,String consumerUnionAccount,int status) {
         AddConsumerUnionAccountLog addlog = new AddConsumerUnionAccountLog();
         addlog.setType(type);
+        addlog.setTId(tId);
         addlog.setCbjId(cbjId);
         addlog.setChjId(chjId);
         addlog.setConsumerUnionAccount(consumerUnionAccount);

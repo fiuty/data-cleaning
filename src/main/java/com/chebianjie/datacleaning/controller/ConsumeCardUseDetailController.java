@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class ConsumeCardUseDetailController {
 
@@ -51,7 +53,7 @@ public class ConsumeCardUseDetailController {
         Page<ConsumeCardUseDetail> consumeCardUseDetailPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("page: {} size: {}", page, size);
+            log.info("chj【consume_card_use_detail】 page: {} size: {}", page, size);
             consumeCardUseDetailPage = consumeCardUseDetailService.getCbjAllConsumeCardUseDetail(pageable);
             totalPage = consumeCardUseDetailPage.getTotalPages();
             List<ConsumeCardUseDetail> consumeCardUseDetailList = consumeCardUseDetailPage.getContent();
@@ -59,17 +61,17 @@ public class ConsumeCardUseDetailController {
                 ConsumeCardUseDetail consumeCardUseDetail = consumeCardUseDetailList.get(i);
                 Long id = consumeCardUseDetail.getId();
                 Long cbjId = consumeCardUseDetail.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null?consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         consumeCardUseDetailService.updateCbjConsumeCardUseDetailById(consumerUnionAccount, id);
-                        logService.saveOne(2,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(2,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(2,cbjId, null, null, 0);
+                        logService.saveOne(2,id,cbjId, null, null, 0);
                 }
             }
             if(totalPage == 0){
@@ -93,7 +95,7 @@ public class ConsumeCardUseDetailController {
         Page<ConsumeCardUseDetail> consumeCardUseDetailPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("page: {} size: {}", page, size);
+            log.info("chj【consume_card_use_detail】page: {} size: {}", page, size);
             consumeCardUseDetailPage = consumeCardUseDetailService.getChjAllConsumeCardUseDetail(pageable);
             totalPage = consumeCardUseDetailPage.getTotalPages();
             List<ConsumeCardUseDetail> consumeCardUseDetailList = consumeCardUseDetailPage.getContent();
@@ -101,17 +103,17 @@ public class ConsumeCardUseDetailController {
                 ConsumeCardUseDetail consumeCardUseDetail = consumeCardUseDetailList.get(i);
                 Long id = consumeCardUseDetail.getId();
                 Long chjId = consumeCardUseDetail.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null?consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         consumeCardUseDetailService.updateChjConsumeCardUseDetailById(consumerUnionAccount, id);
-                        logService.saveOne(2,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(2,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(2,null, chjId, null, 0);
+                        logService.saveOne(2,id,null, chjId, null, 0);
                 }
             }
             if(totalPage == 0){

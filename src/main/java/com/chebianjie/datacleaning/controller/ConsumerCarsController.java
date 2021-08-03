@@ -61,11 +61,11 @@ public class ConsumerCarsController {
             log.info("page: {} size: {}", page, size);
             utUserCarsPage = consumerCarsService.getUtUserCarsByCbj(pageable);  //车便捷
             totalPage = utUserCarsPage.getTotalPages(); //总页数
-            List<UtUserCars> cbjUserCarsList=utUserCarsPage.getContent(); //data
+            List<UtUserCars> cbjUserCarsList = utUserCarsPage.getContent(); //data
             for (int i = 0; i < cbjUserCarsList.size(); i++){
                 UtUserCars cbjUtUserCars = cbjUserCarsList.get(i);
                 String unionAccount = null;
-                ConsumerCarsLog log=new ConsumerCarsLog();
+                ConsumerCarsLog log = new ConsumerCarsLog();
                 if (cbjUtUserCars.getUid() != null){
                     UtConsumer utConsumer = consumerCarsService.getCbjUtConsumerById(cbjUtUserCars.getUid()); //获取车便捷的用户
                     if(utConsumer == null || cbjUtUserCars.getCarDetailId() == null) {
@@ -89,7 +89,7 @@ public class ConsumerCarsController {
                         continue;
                     }
 
-                    if(unionId !=null) {
+                    if(unionId != null) {
                         System.out.println("------------unionId--------------");
                         Consumer consumer2 = consumerCarsService.getConsumerByUnionid(unionId);
                         if(consumer2 != null) {
@@ -100,8 +100,6 @@ public class ConsumerCarsController {
                             continue;
                         }
                     }
-
-
                     log.setUserCarsId(cbjUtUserCars.getId());
                     log.setUid(cbjUtUserCars.getUid());
                     log.setPlatform(Platform.CHEBIANJIE);
@@ -110,11 +108,7 @@ public class ConsumerCarsController {
                     log.setCreatTime(LocalDateTime.now());
                     log.setCarDetailId(cbjUtUserCars.getCarDetailId());
                     consumerCarsLogService.saveOne(log);
-
-
                 }
-
-
             }
 
             page = page +1;
@@ -145,7 +139,7 @@ public class ConsumerCarsController {
             for (int i = 0; i < chjUserCarsList.size(); i++) {
                 UtUserCars chjUtUserCars = chjUserCarsList.get(i);
                 String unionAccount = null;
-                ConsumerCarsLog log=new ConsumerCarsLog();
+                ConsumerCarsLog log = new ConsumerCarsLog();
                 if (chjUtUserCars.getUid() != null) {
                     UtConsumer utConsumer = consumerCarsService.getChjUtConsumerById(chjUtUserCars.getUid());
 
@@ -160,20 +154,20 @@ public class ConsumerCarsController {
                         continue;
                     }
                     String phone = utConsumer.getAccount(); //用户手机号
-                    String unionId=utConsumer.getUnionid(); //Unionid
+                    String unionId = utConsumer.getUnionid(); //Unionid
                     Consumer consumer = consumerCarsService.getConsumerByPhone(phone);
                     if(consumer != null){
-                        Long consumerId=consumer.getId();
+                        Long consumerId = consumer.getId();
                         unionAccount = consumer.getUnionAccount();  //消费者唯一账号
                         //es.submit(new ConsumerCarsThread(consumerCarsService,chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE));
                         consumerCarsService.saveConsumerCars(chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE);
                         continue;
                     }
 
-                    if(unionId !=null) {
+                    if(unionId != null) {
                         Consumer consumer2 = consumerCarsService.getConsumerByUnionid(unionId);
                         if(consumer2 != null) {
-                            Long consumerId=consumer2.getId();
+                            Long consumerId = consumer2.getId();
                             unionAccount = consumer2.getUnionAccount();  //消费者唯一账号
                             //es.submit(new ConsumerCarsThread(consumerCarsService,chjUtUserCars,consumerId,phone,unionAccount,unionId,Platform.CHEHUIJIE));
                             consumerCarsService.saveConsumerCars(chjUtUserCars,consumerId, phone, unionAccount, unionId, Platform.CHEHUIJIE);

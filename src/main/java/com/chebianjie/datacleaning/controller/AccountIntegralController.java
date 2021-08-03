@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class AccountIntegralController {
 
@@ -50,7 +52,7 @@ public class AccountIntegralController {
         Page<AccountIntegral> accountIntegralPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("page: {} size: {}", page, size);
+            log.info("cbj【account_integral】page: {} size: {}", page, size);
             accountIntegralPage = accountIntegralService.getCbjAllAccountIntegral(pageable);
             totalPage = accountIntegralPage.getTotalPages();
             List<AccountIntegral> accountIntegralList = accountIntegralPage.getContent();
@@ -58,7 +60,7 @@ public class AccountIntegralController {
                 AccountIntegral accountIntegral = accountIntegralList.get(i);
                 Long id = accountIntegral.getId();
                 Long cbjId = accountIntegral.getUid();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null?consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
@@ -66,11 +68,11 @@ public class AccountIntegralController {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         accountIntegralService.updateCbjAccountIntegralById(consumerUnionAccount,id);
                         //记录成功log
-                        logService.saveOne(1,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(1,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else {
-                    //记录无用户 失败log
-                    logService.saveOne(1,cbjId,null,null,0);
+                        //记录无用户 失败log
+                        logService.saveOne(1,id,cbjId,null,null,0);
                 }
 
             }
@@ -93,7 +95,7 @@ public class AccountIntegralController {
         Page<AccountIntegral> accountIntegralPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("page: {} size: {}", page, size);
+            log.info("chj【account_integral】page: {} size: {}", page, size);
             accountIntegralPage = accountIntegralService.getChjAllAccountIntegral(pageable);
             totalPage = accountIntegralPage.getTotalPages();
             List<AccountIntegral> accountIntegralList = accountIntegralPage.getContent();
@@ -101,7 +103,7 @@ public class AccountIntegralController {
                 AccountIntegral accountIntegral = accountIntegralList.get(i);
                 Long id = accountIntegral.getId();
                 Long chjId = accountIntegral.getUid();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null?consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
@@ -109,12 +111,12 @@ public class AccountIntegralController {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         accountIntegralService.updateChjAccountIntegralById(consumerUnionAccount,id);
                         //记录成功log
-                        logService.saveOne(1,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(1,id,null,chjId,consumerUnionAccount,1);
 
                     }
                 }else {
-                    //记录无用户 失败log
-                    logService.saveOne(1, null, chjId, null, 0);
+                        //记录无用户 失败log
+                        logService.saveOne(1,id, null, chjId, null, 0);
                 }
             }
             if (totalPage == 0) {

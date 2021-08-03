@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class UtSiteRecommendController {
     @Autowired
@@ -60,10 +62,10 @@ public class UtSiteRecommendController {
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utSiteRecommendService.updateCbjUtSiteRecommendById(consumerUnionAccount, id);
-                        logService.saveOne(12,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(12,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(12,cbjId,null,null,0);
+                        logService.saveOne(12,id,cbjId,null,null,0);
                 }
 
             }
@@ -101,10 +103,10 @@ public class UtSiteRecommendController {
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utSiteRecommendService.updateChjUtSiteRecommendById(consumerUnionAccount, id);
-                        logService.saveOne(12,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(12,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(12,null,chjId,null,0);
+                        logService.saveOne(12,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){
@@ -140,17 +142,17 @@ public class UtSiteRecommendController {
                 UtSiteRecommend utSiteRecommend = utSiteRecommendList.get(i);
                 Long id = utSiteRecommend.getId();
                 Long cbjId = utSiteRecommend.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null ? consumerLogService.getCbjConsumerLogByConsumerId(cbjId) : new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utSiteRecommendService.updateCbjCouponUtSiteRecommendById(consumerUnionAccount, id);
-                        logService.saveOne(18,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(18,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                    logService.saveOne(18,cbjId,null,null,0);
+                        logService.saveOne(18,id,cbjId,null,null,0);
                 }
 
             }
@@ -182,17 +184,17 @@ public class UtSiteRecommendController {
                 UtSiteRecommend utSiteRecommend = utSiteRecommendList.get(i);
                 Long id = utSiteRecommend.getId();
                 Long chjId = utSiteRecommend.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null ? consumerLogService.getChjConsumerLogByConsumerId(chjId) : new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utSiteRecommendService.updateChjCouponUtSiteRecommendById(consumerUnionAccount, id);
-                        logService.saveOne(18,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(18,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(18,null,chjId,null,0);
+                        logService.saveOne(18,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){

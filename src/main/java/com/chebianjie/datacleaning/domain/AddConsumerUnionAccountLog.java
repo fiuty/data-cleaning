@@ -15,6 +15,10 @@ public class AddConsumerUnionAccountLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * type的table主键
+     */
+    private Long tId;
 
     /**
      * 车便捷consumerId

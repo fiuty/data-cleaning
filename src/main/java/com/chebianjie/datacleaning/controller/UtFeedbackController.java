@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class UtFeedbackController {
 
@@ -55,17 +57,17 @@ public class UtFeedbackController {
                 UtFeedback utFeedback = utFeedbackList.get(i);
                 Long id = utFeedback.getId();
                 Long cbjId = utFeedback.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null ? consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utFeedbackService.updateCbjUtFeedbackById(consumerUnionAccount, id);
-                        logService.saveOne(9,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(9,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(9,cbjId,null,null,0);
+                        logService.saveOne(9,id,cbjId,null,null,0);
                 }
             }
             if(totalPage == 0){
@@ -94,17 +96,17 @@ public class UtFeedbackController {
                 UtFeedback utFeedback = utFeedbackList.get(i);
                 Long id = utFeedback.getId();
                 Long chjId = utFeedback.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null?consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utFeedbackService.updateChjUtFeedbackById(consumerUnionAccount, id);
-                        logService.saveOne(9,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(9,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(9,null,chjId,null,0);
+                        logService.saveOne(9,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){
@@ -130,7 +132,7 @@ public class UtFeedbackController {
         Page<UtFeedback> utFeedbackPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("cbj【ut_feedback】page: {} size: {}", page, size);
+            log.info("cbj Coupon【ut_feedback】page: {} size: {}", page, size);
             utFeedbackPage = utFeedbackService.getCbjCouponAllUtFeedback(pageable);
             totalPage = utFeedbackPage.getTotalPages();
             List<UtFeedback> utFeedbackList = utFeedbackPage.getContent();
@@ -138,17 +140,17 @@ public class UtFeedbackController {
                 UtFeedback utFeedback = utFeedbackList.get(i);
                 Long id = utFeedback.getId();
                 Long cbjId = utFeedback.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId!=null ? consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utFeedbackService.updateCbjCouponUtFeedbackById(consumerUnionAccount, id);
-                        logService.saveOne(17,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(17,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                    logService.saveOne(17,cbjId,null,null,0);
+                        logService.saveOne(17,id,cbjId,null,null,0);
                 }
             }
             if(totalPage == 0){
@@ -170,7 +172,7 @@ public class UtFeedbackController {
         Page<UtFeedback> utFeedbackPage;
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
-            log.info("chj【ut_feedback】page: {} size: {}", page, size);
+            log.info("chj Coupon【ut_feedback】page: {} size: {}", page, size);
             utFeedbackPage = utFeedbackService.getChjCouponAllUtFeedback(pageable);
             totalPage = utFeedbackPage.getTotalPages();
             List<UtFeedback> utFeedbackList = utFeedbackPage.getContent();
@@ -178,17 +180,17 @@ public class UtFeedbackController {
                 UtFeedback utFeedback = utFeedbackList.get(i);
                 Long id = utFeedback.getId();
                 Long chjId = utFeedback.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId !=null? consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utFeedbackService.updateChjCouponUtFeedbackById(consumerUnionAccount, id);
-                        logService.saveOne(17,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(17,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else{
-                    logService.saveOne(17,null,chjId,null,0);
+                    logService.saveOne(17,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){

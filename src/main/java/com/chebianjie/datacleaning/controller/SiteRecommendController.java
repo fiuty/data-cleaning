@@ -18,9 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class SiteRecommendController {
 
@@ -55,17 +57,17 @@ public class SiteRecommendController {
                 SiteRecommend siteRecommend = siteRecommendList.get(i);
                 Long id = siteRecommend.getId();
                 Long cbjId = siteRecommend.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId!=null?consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if(consumerLogList.size()>0){
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if(consumer != null){
                         String consumerUnionAccount = consumer.getUnionAccount();
                         siteRecommendService.updateCbjSiteRecommendById(consumerUnionAccount, id);
-                        logService.saveOne(4,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(4,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(4,cbjId, null, null, 0);
+                        logService.saveOne(4,id,cbjId, null, null, 0);
                 }
             }
             if(totalPage == 0){

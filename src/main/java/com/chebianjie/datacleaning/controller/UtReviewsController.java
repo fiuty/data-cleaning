@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 @Slf4j
 public class UtReviewsController {
 
@@ -52,7 +54,7 @@ public class UtReviewsController {
                 Long id = utReviews.getId();
                 Long cbjId = utReviews.getConsumerId();
                 //根据车便捷consumerId查用日志表
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null ? consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if (consumerLogList.size() > 0) {
                     //原consumerId
                     Long consumerId = consumerLogList.get(0).getConsumerId();
@@ -62,10 +64,10 @@ public class UtReviewsController {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         //执行更改
                         utReviewsService.updateCbjUtReviewsById(consumerUnionAccount, id);
-                        logService.saveOne(10,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(10,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(10,cbjId,null,null,0);
+                        logService.saveOne(10,id,cbjId,null,null,0);
                 }
             }
             if(totalPage == 0){
@@ -94,17 +96,17 @@ public class UtReviewsController {
                 UtReviews utReviews = utReviewsList.get(i);
                 Long id = utReviews.getId();
                 Long chjId = utReviews.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId != null ? consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if (consumerLogList.size() > 0) {
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if (consumer != null) {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utReviewsService.updateChjUtReviewsById(consumerUnionAccount, id);
-                        logService.saveOne(10,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(10,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(10,null,chjId,null,0);
+                        logService.saveOne(10,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){
@@ -144,7 +146,7 @@ public class UtReviewsController {
                 Long id = utReviews.getId();
                 Long cbjId = utReviews.getConsumerId();
                 //根据车便捷consumerId查用日志表
-                List<ConsumerLog> consumerLogList = consumerLogService.getCbjConsumerLogByConsumerId(cbjId);
+                List<ConsumerLog> consumerLogList = cbjId != null ? consumerLogService.getCbjConsumerLogByConsumerId(cbjId):new ArrayList<>();
                 if (consumerLogList.size() > 0) {
                     //原consumerId
                     Long consumerId = consumerLogList.get(0).getConsumerId();
@@ -154,10 +156,10 @@ public class UtReviewsController {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         //执行更改
                         utReviewsService.updateCbjCouponUtReviewsById(consumerUnionAccount, id);
-                        logService.saveOne(15,cbjId,null,consumerUnionAccount,1);
+                        logService.saveOne(15,id,cbjId,null,consumerUnionAccount,1);
                     }
                 }else{
-                        logService.saveOne(15,cbjId,null,null,0);
+                        logService.saveOne(15,id,cbjId,null,null,0);
                 }
             }
             if(totalPage == 0){
@@ -181,24 +183,24 @@ public class UtReviewsController {
         do {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
             log.info("chj_coupon【ut_reviews】page: {} size: {}", page, size);
-            utReviewsPage = utReviewsService.getChjAllUtReviews(pageable);
+            utReviewsPage = utReviewsService.getChjCouponAllUtReviews(pageable);
             totalPage = utReviewsPage.getTotalPages();
             List<UtReviews> utReviewsList = utReviewsPage.getContent();
             for (int i = 0; i < utReviewsList.size(); i++) {
                 UtReviews utReviews = utReviewsList.get(i);
                 Long id = utReviews.getId();
                 Long chjId = utReviews.getConsumerId();
-                List<ConsumerLog> consumerLogList = consumerLogService.getChjConsumerLogByConsumerId(chjId);
+                List<ConsumerLog> consumerLogList = chjId!=null ? consumerLogService.getChjConsumerLogByConsumerId(chjId):new ArrayList<>();
                 if (consumerLogList.size() > 0) {
                     Long consumerId = consumerLogList.get(0).getConsumerId();
                     Consumer consumer = consumerService.findById(consumerId);
                     if (consumer != null) {
                         String consumerUnionAccount = consumer.getUnionAccount();
                         utReviewsService.updateChjCouponUtReviewsById(consumerUnionAccount, id);
-                        logService.saveOne(15,null,chjId,consumerUnionAccount,1);
+                        logService.saveOne(15,id,null,chjId,consumerUnionAccount,1);
                     }
                 }else {
-                        logService.saveOne(15,null,chjId,null,0);
+                        logService.saveOne(15,id,null,chjId,null,0);
                 }
             }
             if(totalPage == 0){
