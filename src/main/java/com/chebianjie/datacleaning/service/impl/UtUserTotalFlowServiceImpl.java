@@ -108,6 +108,8 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
             log.info("用户余额清洗-车惠捷流水增量总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
         dataSynTime.setLastTime(toEpochMilli(timeTo));
+        chjDataSynTime.setLastTime(toEpochMilli(timeTo));
+        dataSynTimeService.updateDataSynTime(chjDataSynTime);
         dataSynTimeService.updateDataSynTime(dataSynTime);
         log.info("用户余额清洗-同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
     }

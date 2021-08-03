@@ -67,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
     public void cleaningCBJWashOrder(Long consumerId, String phone, String consumerAccount) {
         log.info("==========清洗车便捷用户id：{}，手机号：{}，唯一标识：{}========", consumerId, phone, consumerAccount);
         // 自助洗车
-        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerIdAndConsumerAccountNull(consumerId);
+        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
             Integer updateResult = utConsumpRepository.updateConsumerAccount(consumerId, consumerAccount);
@@ -103,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
     public void cleaningCHJWashOrder(Long consumerId, String phone, String consumerAccount) {
         log.info("==========清洗车惠捷用户id：{}，手机号：{}，唯一标识：{}========", consumerId, phone, consumerAccount);
         // 自助洗车
-        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerIdAndConsumerAccountNull(consumerId);
+        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
             Integer updateResult = utConsumpRepository.updateConsumerAccount(consumerId, consumerAccount);
