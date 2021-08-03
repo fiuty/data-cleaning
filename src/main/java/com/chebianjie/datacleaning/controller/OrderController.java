@@ -89,7 +89,7 @@ public class OrderController {
                 }
             }
             Instant endTime = Instant.now();
-            log.info("总页数:{},第：{}页,总用时：{}ms", totalPage, i + 1, Duration.between(startTime, endTime).toMillis());
+            log.info("车便捷总页数:{},第：{}页,总用时：{}ms", totalPage, i + 1, Duration.between(startTime, endTime).toMillis());
         }
         Instant totalEndTime = Instant.now();
         log.info("车便捷清洗洗车订单和充值订单总用时：{}ms", Duration.between(totalStartTime, totalEndTime).toMillis());
@@ -110,7 +110,7 @@ public class OrderController {
         int pageSize = 1000;
         int totalPage = computeTotalPage(totalCount, pageSize);
         Instant totalStartTime = Instant.now();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < totalPage; i++) {
             List<Consumer> consumerList = consumerService.findAllByPage(i * pageSize, pageSize);
             Instant startTime = Instant.now();
             for (Consumer consumer : consumerList) {
@@ -125,10 +125,10 @@ public class OrderController {
                 }
             }
             Instant endTime = Instant.now();
-            log.info("总页数:{},第：{}页,总用时：{}ms", totalPage, i + 1, Duration.between(startTime, endTime).toMillis());
+            log.info("车惠捷总页数:{},第：{}页,总用时：{}ms", totalPage, i + 1, Duration.between(startTime, endTime).toMillis());
         }
         Instant totalEndTime = Instant.now();
-        log.info("车便捷清洗洗车订单和充值订单总用时：{}ms", Duration.between(totalStartTime, totalEndTime).toMillis());
+        log.info("车惠捷清洗洗车订单和充值订单总用时：{}ms", Duration.between(totalStartTime, totalEndTime).toMillis());
     }
 
 
