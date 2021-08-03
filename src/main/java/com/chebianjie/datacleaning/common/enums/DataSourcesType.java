@@ -62,10 +62,7 @@ public enum DataSourcesType {
      * 车便捷carserver
      */
     CBJ_CAR_SERVER,
-    /**
-     * 车惠捷carserver
-     */
-    CHJ_CAR_SERVER,
+
     /**
      * 车便捷cbjreport
      */

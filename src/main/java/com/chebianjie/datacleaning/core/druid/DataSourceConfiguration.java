@@ -143,15 +143,7 @@ public class DataSourceConfiguration {
         return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
     }
 
-    /**
-     * 车惠捷carserver
-     */
-    @Bean
-    @ConditionalOnProperty( prefix = "spring.datasource.druid.chjcarserver",name = "enable", havingValue = "true")//是否开启数据源开关---若不开启 默认适用默认数据源
-    @ConfigurationProperties("spring.datasource.druid.chjcarserver")
-    public DataSource chjCarServerDataSource(DataSourceProperties dataSourceProperties){
-        return dataSourceProperties.setDataSource(DruidDataSourceBuilder.create().build());
-    }
+
 
 
     /**
@@ -193,7 +185,7 @@ public class DataSourceConfiguration {
                                                DataSource cbjOrderDataSource, DataSource chjOrderDataSource, DataSource cbjCouponDataSource,
                                                DataSource chjCouponDataSource, DataSource cbjStaffDataSource, DataSource chjStaffDataSource,
                                                DataSource cbjAgentDataSource,DataSource chjAgentDataSource,DataSource cbjCarServerDataSource,
-                                               DataSource chjCarServerDataSource,DataSource cbjReportDataSource,DataSource chjReportDataSource
+                                               DataSource cbjReportDataSource,DataSource chjReportDataSource
                                                ) {
         Map<Object, Object> targetDataSources = new HashMap<>();
         DynamicDataSource dynamicDataSource = DynamicDataSource.build();
@@ -209,7 +201,6 @@ public class DataSourceConfiguration {
         targetDataSources.put(DataSourcesType.CBJ_AGENT.name(), cbjAgentDataSource);
         targetDataSources.put(DataSourcesType.CHJ_AGENT.name(), chjAgentDataSource);
         targetDataSources.put(DataSourcesType.CBJ_CAR_SERVER.name(), cbjCarServerDataSource);
-        targetDataSources.put(DataSourcesType.CHJ_CAR_SERVER.name(), chjCarServerDataSource);
         targetDataSources.put(DataSourcesType.CBJ_REPORT.name(), cbjReportDataSource);
         targetDataSources.put(DataSourcesType.CHJ_REPORT.name(), chjReportDataSource);
 
