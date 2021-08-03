@@ -66,7 +66,7 @@ public class FlowListener {
                 List<UtConsumer> cbjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
                 UtConsumer cbjUtConsumer = CollectionUtil.isEmpty(cbjUtConsumerList) ? null : cbjUtConsumerList.get(0);
                 //获取车惠捷旧用户数据
-                List<UtConsumer> chjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
+                List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
                 UtConsumer chjUtConsumer = CollectionUtil.isEmpty(chjUtConsumerList) ? null : chjUtConsumerList.get(0);
                 //清洗余额
                 consumerBalanceService.updateConsumerBalance(consumer, cbjUtConsumer, chjUtConsumer);
