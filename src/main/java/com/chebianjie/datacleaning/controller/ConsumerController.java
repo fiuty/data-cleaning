@@ -183,9 +183,15 @@ public class ConsumerController extends AbstractBaseController{
                     curCbjUtConsumer = fixUtConsumerByAccount(curCbjUtConsumer, 1);
                     //获取与当前车便捷用户对应的车惠捷用户
                     UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
-                    //检查是否已经清洗
-                    if (!checkCleanConsumer(curCbjUtConsumer, 1)) {
-                        //6.处理数据
+                    //检查是否已清洗
+                    Consumer curConsumer = consumerService.findByPhone(curCbjUtConsumer.getAccount());
+                    if(curConsumer != null) {
+                        //清洗
+                        log.info("[增量1] utConsumer : {}", curCbjUtConsumer);
+                        cleanFixConsumer(curCbjUtConsumer, 1);
+                    }else{
+                        //处理数据
+                        log.info("[增量2] utConsumer : {}", curCbjUtConsumer);
                         es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
                     }
                 }else{
@@ -233,12 +239,16 @@ public class ConsumerController extends AbstractBaseController{
                     curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
                     //获取与当前车便捷用户对应的车惠捷用户
                     UtConsumer cbjUtConsumer = getCbjUtConsumerByChjUtConsumer(curChjUtConsumer);
-                    //检查是否已经清洗
-                    if (!checkCleanConsumer(curChjUtConsumer, 2)) {
+                    //检查是否已清洗
+                    Consumer curConsumer = consumerService.findByPhone(curChjUtConsumer.getAccount());
+                    if(curConsumer != null) {
+                        //清洗
+                        log.info("[增量1] utConsumer : {}", curChjUtConsumer);
+                        cleanFixConsumer(curChjUtConsumer, 2);
+                    }else{
                         //处理数据
+                        log.info("[增量2] utConsumer : {}", curChjUtConsumer);
                         es.submit(new ConsumerTask(consumerService, consumerBalanceService, cbjUtConsumer, curChjUtConsumer));
-                    } else {
-                        log.info("[CHJ SYNC] EXIST");
                     }
                 }else{
                     //脏数据转移备份表

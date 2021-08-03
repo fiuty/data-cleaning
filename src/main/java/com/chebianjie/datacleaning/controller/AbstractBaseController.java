@@ -158,6 +158,54 @@ public class AbstractBaseController {
     }
 
     /**
+     * 增量清洗 - 用户
+     * @param utConsumer
+     * @param type
+     * @return void
+     */
+    @Synchronized
+    protected void cleanFixConsumer(UtConsumer utConsumer, int type){
+        log.info("[增量fix] utConsumer : {}", utConsumer);
+        Consumer curConsumer = consumerService.findByPhone(utConsumer.getAccount());
+        ConsumerLog curConsumerLog = consumerLogService.getOneByConsumerIdAndStatusAndType(curConsumer.getId(), 1, 1);
+        if(type == 1) {
+            //车便捷
+            if (curConsumerLog.getChjAccount().equals(utConsumer.getAccount())) {
+                //update consumerLog
+                curConsumerLog.setCbjId(utConsumer.getId());
+                curConsumerLog.setCbjAccount(utConsumer.getAccount());
+                //update consumerBalance
+                ConsumerBalance realBalance = consumerBalanceService.getByConsumerIdAndBalanceType(curConsumer.getId(), BalanceType.REAL_BALANCE);
+                realBalance.setValue(realBalance.getValue() + utConsumer.getBalance());
+                consumerBalanceService.save(realBalance);
+                ConsumerBalance giveBalance = consumerBalanceService.getByConsumerIdAndBalanceType(curConsumer.getId(), BalanceType.GIVE_BALANCE);
+                giveBalance.setValue(giveBalance.getValue() + utConsumer.getGiveBalance());
+                consumerBalanceService.save(giveBalance);
+                log.info("[增量fix CBJ] utConsumer : {}", utConsumer);
+            }else{
+                log.info("[增量fix CBJ exist] utConsumer : {}", utConsumer);
+            }
+        }else if(type == 2){
+            //车惠捷
+            if (curConsumerLog.getCbjAccount().equals(utConsumer.getAccount())) {
+                //update consumerLog
+                curConsumerLog.setChjId(utConsumer.getId());
+                curConsumerLog.setChjAccount(utConsumer.getAccount());
+                //update consumerBalance
+                ConsumerBalance realBalance = consumerBalanceService.getByConsumerIdAndBalanceType(curConsumer.getId(), BalanceType.REAL_BALANCE);
+                realBalance.setValue(realBalance.getValue() + utConsumer.getBalance());
+                consumerBalanceService.save(realBalance);
+                ConsumerBalance giveBalance = consumerBalanceService.getByConsumerIdAndBalanceType(curConsumer.getId(), BalanceType.GIVE_BALANCE);
+                giveBalance.setValue(giveBalance.getValue() + utConsumer.getGiveBalance());
+                consumerBalanceService.save(giveBalance);
+                log.info("[增量fix CHJ] utConsumer : {}", utConsumer);
+            }else{
+                log.info("[增量fix CHJ exist] utConsumer : {}", utConsumer);
+            }
+        }
+    }
+
+    /**
      * 检测是否已清洗 - 优惠券
      * @param utCouponUser
      * @param  type  1.用户优惠券迁移 - 车便捷 2.用户优惠券迁移 - 车惠捷
