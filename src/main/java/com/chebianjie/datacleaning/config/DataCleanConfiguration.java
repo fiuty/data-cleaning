@@ -47,6 +47,16 @@ public class DataCleanConfiguration {
      */
     private int consumerStartPage;
 
+    /**
+     * 补全用户清洗分页点 - 车便捷
+     */
+    private int fixCbjConsumerStartPage;
+
+    /**
+     * 补全用户清洗分页点 - 车惠捷
+     */
+    private int fixChjConsumerStartPage;
+
     public LocalDateTime getFlowConsumerTime() {
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.parse(flowConsumerTime, df);

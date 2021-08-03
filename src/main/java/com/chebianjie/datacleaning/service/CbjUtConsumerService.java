@@ -20,6 +20,8 @@ public interface CbjUtConsumerService {
 
     int countByCreatetimeLessThanEqual(Long consumerTime);
 
+    int countByCreateTimeGreaterThan(Long consumerTime);
+
     List<UtConsumer> findAllByPage(int pageNumber, int pageSize);
 
     int countByUnionidAndStatue(String unionid, int statue);

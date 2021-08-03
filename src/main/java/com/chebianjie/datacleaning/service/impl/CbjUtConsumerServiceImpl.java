@@ -40,6 +40,7 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     }
 
     @Override
+    @DataSource(name = DataSourcesType.MASTER)
     public List<UtConsumer> getUtConsumerListByAccount(String account) {
         return utConsumerRepository.findListByAccount(account);
     }
@@ -54,6 +55,12 @@ public class CbjUtConsumerServiceImpl implements CbjUtConsumerService {
     @DataSource(name = DataSourcesType.MASTER)
     public int countByCreatetimeLessThanEqual(Long consumerTime) {
         return utConsumerRepository.countByCreatetimeLessThanEqual(consumerTime);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public int countByCreateTimeGreaterThan(Long consumerTime) {
+        return utConsumerRepository.countByCreatetimeGreaterThan(consumerTime);
     }
 
     @Override

@@ -27,6 +27,8 @@ public interface UtConsumerRepository extends JpaSpecificationExecutor<UtConsume
 
     int countByCreatetimeLessThanEqual(Long consumerTime);
 
+    int countByCreatetimeGreaterThan(long consumerTime);
+
     @Query(nativeQuery = true,value = "select * from ut_consumer t,(select id from ut_consumer order by id limit :pageNumber, :pageSize) temp where t.id = temp.id")
     List<UtConsumer> findAllByPage(@Param("pageNumber") int pageNumber,@Param("pageSize") int pageSize);
 

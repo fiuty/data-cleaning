@@ -71,6 +71,12 @@ public class ChjUtConsumerServiceImpl implements ChjUtConsumerService {
 
     @Override
     @DataSource(name = DataSourcesType.SLAVE)
+    public int countByCreateTimeGreaterThan(Long consumerTime) {
+        return utConsumerRepository.countByCreatetimeGreaterThan(consumerTime);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
     public List<UtConsumer> findAllByPage(int pageNumber, int pageSize) {
         return utConsumerRepository.findAllByPage(pageNumber,pageSize);
     }

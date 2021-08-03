@@ -158,6 +158,108 @@ public class ConsumerController extends AbstractBaseController{
         return "test finish";
     }
 
+    /**
+     * 补全数据 - 车便捷
+     * @return
+     */
+    @GetMapping("/fix1")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Object fixConsumer1(){
+        long start = System.currentTimeMillis();
+        //创建线程
+        final ExecutorService es = Executors.newFixedThreadPool(50);
+        int total = cbjUtConsumerService.countByCreateTimeGreaterThan(dataCleanConfiguration.getConsumerTime());
+        int startPage = dataCleanConfiguration.getFixCbjConsumerStartPage();
+        int totalPage = computeTotalPage(total) + startPage;
+        int pageSize = 1000;
+        Instant totalStart = Instant.now();
+        for (int pageNumber = startPage; pageNumber <= totalPage; pageNumber++) {
+            Instant now = Instant.now();
+            List<UtConsumer> utConsumers = cbjUtConsumerService.findAllByPage(pageNumber * pageSize, pageSize);
+            utConsumers.forEach(curCbjUtConsumer ->{
+                //判断是否为脏数据
+                if(checkUtConsumer(curCbjUtConsumer, 1)) {
+                    //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                    curCbjUtConsumer = fixUtConsumerByAccount(curCbjUtConsumer, 1);
+                    //获取与当前车便捷用户对应的车惠捷用户
+                    UtConsumer chjUtConsumer = getChjUtConsumerByCbjUtConsumer(curCbjUtConsumer);
+                    //检查是否已经清洗
+                    if (!checkCleanConsumer(curCbjUtConsumer, 1)) {
+                        //6.处理数据
+                        es.submit(new ConsumerTask(consumerService, consumerBalanceService, curCbjUtConsumer, chjUtConsumer));
+                    }
+                }else{
+                    //脏数据转移备份表
+                    UtConsumerBak temp = new UtConsumerBak();
+                    BeanUtils.copyProperties(curCbjUtConsumer, temp);
+                    temp.setId(null);
+                    temp.setPlatform(1);
+                    utConsumerBakService.save(temp);
+                    log.info("[CBJ 脏数据] INSERT");
+                }
+            });
+            Instant end = Instant.now();
+            log.info("车便捷用户清洗,总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
+        }
+        Instant totalEnd = Instant.now();
+        log.info("车便捷用户清洗,总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
+        es.shutdown();
+
+        return "finish: [" + (System.currentTimeMillis() - start) + "]";
+    }
+
+    /**
+     * 补全数据 - 车惠捷
+     * @return
+     */
+    @GetMapping("/fix2")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Object fixConsumer2(){
+        long start = System.currentTimeMillis();
+        //创建线程
+        ExecutorService es = Executors.newFixedThreadPool(50);
+        int total = chjUtConsumerService.countByCreateTimeGreaterThan(dataCleanConfiguration.getConsumerTime());
+        int startPage = dataCleanConfiguration.getFixChjConsumerStartPage();
+        int totalPage = computeTotalPage(total) + startPage;
+        int pageSize = 1000;
+        Instant totalStart = Instant.now();
+        for (int pageNumber = startPage; pageNumber <= totalPage; pageNumber++) {
+            Instant now = Instant.now();
+            List<UtConsumer> utConsumers = chjUtConsumerService.findAllByPage(pageNumber * pageSize, pageSize);
+            utConsumers.forEach(curChjUtConsumer->{
+                //判断是否为脏数据
+                if(checkUtConsumer(curChjUtConsumer, 2)) {
+                    //针对存在同一account多条数据需提前合并 - 旧注册接口(utConsumerResource)限制account不重复
+                    curChjUtConsumer = fixUtConsumerByAccount(curChjUtConsumer, 2);
+                    //获取与当前车便捷用户对应的车惠捷用户
+                    UtConsumer cbjUtConsumer = getCbjUtConsumerByChjUtConsumer(curChjUtConsumer);
+                    //检查是否已经清洗
+                    if (!checkCleanConsumer(curChjUtConsumer, 2)) {
+                        //处理数据
+                        es.submit(new ConsumerTask(consumerService, consumerBalanceService, cbjUtConsumer, curChjUtConsumer));
+                    } else {
+                        log.info("[CHJ SYNC] EXIST");
+                    }
+                }else{
+                    //脏数据转移备份表
+                    UtConsumerBak temp = new UtConsumerBak();
+                    BeanUtils.copyProperties(curChjUtConsumer, temp);
+                    temp.setId(null);
+                    temp.setPlatform(2);
+                    utConsumerBakService.save(temp);
+                    log.info("[CHJ 脏数据] INSERT");
+                }
+            });
+            Instant end = Instant.now();
+            log.info("车惠捷用户清洗,总页数:{},第：{}页,总用时：{} s", totalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
+        }
+        Instant totalEnd = Instant.now();
+        log.info("车惠捷用户清洗,总用时：{}ms", Duration.between(totalStart, totalEnd).toMillis());
+        es.shutdown();
+
+        return "[CHJ SYNC] finish [" + (System.currentTimeMillis() - start) + "]";
+    }
+
     private int computeTotalPage(long total) {
         int pageSize = 1000;
         int totalPage = (int)total / pageSize;
