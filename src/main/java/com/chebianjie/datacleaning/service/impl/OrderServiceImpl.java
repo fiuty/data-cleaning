@@ -47,10 +47,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @DataSource(name = DataSourcesType.CBJ_ORDER)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void cleaningCBJWashOrder(Integer consumerId, String phone, String consumerAccount) {
+    public void cleaningCBJWashOrder(Long consumerId, String phone, String consumerAccount) {
         log.info("==========清洗车便捷用户id：{}，手机号：{}，唯一标识：{}========", consumerId, phone, consumerAccount);
         // 自助洗车
-        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId.intValue());
+        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
             for (UtConsump utConsump : utConsumps) {
@@ -92,10 +92,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @DataSource(name = DataSourcesType.CHJ_ORDER)
-    public void cleaningCHJWashOrder(Integer consumerId, String phone, String consumerAccount) {
+    public void cleaningCHJWashOrder(Long consumerId, String phone, String consumerAccount) {
         log.info("==========清洗车惠捷用户id：{}，手机号：{}，唯一标识：{}========", consumerId, phone, consumerAccount);
         // 自助洗车
-        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId.intValue());
+        List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
             for (UtConsump utConsump : utConsumps) {

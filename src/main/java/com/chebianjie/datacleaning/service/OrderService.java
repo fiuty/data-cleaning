@@ -16,11 +16,11 @@ public interface OrderService {
 
 
 
-    void cleaningCBJWashOrder(Integer consumerId, String phone, String consumerAccount);
+    void cleaningCBJWashOrder(Long consumerId, String phone, String consumerAccount);
 
 
 
-    void cleaningCHJWashOrder(Integer consumerId, String phone, String consumerAccount);
+    void cleaningCHJWashOrder(Long consumerId, String phone, String consumerAccount);
 
 
     /**

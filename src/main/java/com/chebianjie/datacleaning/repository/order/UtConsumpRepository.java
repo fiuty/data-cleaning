@@ -22,7 +22,7 @@ import java.util.List;
 public interface UtConsumpRepository extends JpaSpecificationExecutor<UtConsump>, JpaRepository<UtConsump, Long>, CrudRepository<UtConsump, Long> {
 
 
-    List<UtConsump> findAllByConsumerId(Integer consumerId);
+    List<UtConsump> findAllByConsumerId(Long consumerId);
 
     @Modifying
     @Query(value = "update UtConsump set consumerAccount = :consumerAccount where id =:id")

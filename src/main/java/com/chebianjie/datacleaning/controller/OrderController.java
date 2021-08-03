@@ -65,7 +65,7 @@ public class OrderController {
         int totalSum = 0;
 
 
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(8, 10, 60, TimeUnit.SECONDS,
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
         Long totalCount = consumerService.findTotalCount();
@@ -83,7 +83,7 @@ public class OrderController {
                 if (cbjConsumer != null && consumer != null) {
                     Long consumerId = cbjConsumer.getId();
                     log.info("清洗车便捷用户洗车订单和充值订单----用户id：{}，手机号：{}，唯一标识：{}=======", consumerId, phone, consumerAccount);
-                    threadPoolExecutor.submit(new OrderTask(orderService, consumerId.intValue(), phone, consumerAccount, 1));
+                    threadPoolExecutor.submit(new OrderTask(orderService, consumerId, phone, consumerAccount, 1));
                 }
             }
             Instant endTime = Instant.now();
@@ -102,7 +102,7 @@ public class OrderController {
     @GetMapping("/cleaningCHJWashOrder")
     public void cleaningCHJWashOrder() {
         //创建线程
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(8, 10, 60, TimeUnit.SECONDS,
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
         Long totalCount = consumerService.findTotalCount();
         int pageSize = 1000;
@@ -118,7 +118,7 @@ public class OrderController {
                 if (chjConsumer != null && consumer != null) {
                     Long consumerId = chjConsumer.getId();
                     log.info("清洗车便捷用户洗车订单和充值订单----用户id：{}，手机号：{}，唯一标识：{}=======", consumerId, phone, consumerAccount);
-                    threadPoolExecutor.submit(new OrderTask(orderService, consumerId.intValue(), phone, consumerAccount, 2));
+                    threadPoolExecutor.submit(new OrderTask(orderService, consumerId, phone, consumerAccount, 2));
                 }
             }
             Instant endTime = Instant.now();
