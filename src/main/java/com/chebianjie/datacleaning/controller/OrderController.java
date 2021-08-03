@@ -110,7 +110,7 @@ public class OrderController {
         int pageSize = 1000;
         int totalPage = computeTotalPage(totalCount, pageSize);
         Instant totalStartTime = Instant.now();
-        for (int i = 0; i < totalPage; i++) {
+        for (int i = 0; i < 1; i++) {
             List<Consumer> consumerList = consumerService.findAllByPage(i * pageSize, pageSize);
             Instant startTime = Instant.now();
             for (Consumer consumer : consumerList) {
@@ -119,7 +119,7 @@ public class OrderController {
                 UtConsumer chjConsumer = chjUtConsumerService.getUtConsumerByPhone(phone);
                 if (chjConsumer != null && consumer != null) {
                     Long consumerId = chjConsumer.getId();
-                    log.info("清洗车便捷用户洗车订单和充值订单----用户id：{}，手机号：{}，唯一标识：{}=======", consumerId, phone, consumerAccount);
+                    log.info("清洗车惠捷用户洗车订单和充值订单----用户id：{}，手机号：{}，唯一标识：{}=======", consumerId, phone, consumerAccount);
 //                    threadPoolExecutor.submit(new OrderTask(orderService, consumerId, phone, consumerAccount, 2));
                     orderService.cleaningCHJWashOrder(consumerId, phone, consumerAccount);
                 }
@@ -156,19 +156,16 @@ public class OrderController {
                     }
                     if (StrUtil.isBlank(searchPhone)) {
                         log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
                     }
                     Consumer consumer = consumerService.findByPhone(searchPhone);
                     if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
                         String consumerAccount = consumer.getUnionAccount();
-                        List<Map<String, Object>> saveAll = new ArrayList<>(utConsumpList.size());
-                        for (UtConsump utConsump : utConsumpList) {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("consumerId", consumerId);
-                            map.put("consumerAccount", consumerAccount);
-                            map.put("phone", searchPhone);
-                            saveAll.add(map);
-                        }
-                        orderService.cbjUpdateOrder(1, saveAll, startTime);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(1, map, startTime);
                     }
                 }
             }
@@ -199,19 +196,16 @@ public class OrderController {
                     }
                     if (StrUtil.isBlank(searchPhone)) {
                         log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
                     }
                     Consumer consumer = consumerService.findByPhone(searchPhone);
                     if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
                         String consumerAccount = consumer.getUnionAccount();
-                        List<Map<String, Object>> saveAll = new ArrayList<>(dushOrderList.size());
-                        for (DushOrder dushOrder : dushOrderList) {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("id", dushOrder.getId());
-                            map.put("consumerAccount", consumerAccount);
-                            map.put("phone", searchPhone);
-                            saveAll.add(map);
-                        }
-                        orderService.cbjUpdateOrder(2, saveAll, startTime);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(2, map, startTime);
                     }
                 }
             }
@@ -242,19 +236,16 @@ public class OrderController {
                     }
                     if (StrUtil.isBlank(searchPhone)) {
                         log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
                     }
                     Consumer consumer = consumerService.findByPhone(searchPhone);
                     if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
                         String consumerAccount = consumer.getUnionAccount();
-                        List<Map<String, Object>> saveAll = new ArrayList<>(autoOrderList.size());
-                        for (AutoOrder autoOrder : autoOrderList) {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("id", autoOrder.getId());
-                            map.put("consumerAccount", consumerAccount);
-                            map.put("phone", searchPhone);
-                            saveAll.add(map);
-                        }
-                        orderService.cbjUpdateOrder(3, saveAll, startTime);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(3, map, startTime);
                     }
                 }
             }
@@ -284,25 +275,187 @@ public class OrderController {
                     }
                     if (StrUtil.isBlank(searchPhone)) {
                         log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
                     }
                     Consumer consumer = consumerService.findByPhone(searchPhone);
                     if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
                         String consumerAccount = consumer.getUnionAccount();
-                        List<Map<String, Object>> saveAll = new ArrayList<>(chargeOrderList.size());
-                        for (UtChargeLog utChargeLog : chargeOrderList) {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("id", utChargeLog.getId());
-                            map.put("consumerAccount", consumerAccount);
-                            map.put("phone", searchPhone);
-                            saveAll.add(map);
-                        }
-                        orderService.cbjUpdateOrder(3, saveAll, startTime);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(4, map, startTime);
                     }
                 }
             }
         }
         return BaseResponse.success();
     }
+
+
+
+    @GetMapping("/cleaningTimeCHJWashOrder/{timeStr}")
+    public BaseResponse cleaningTimeCHJWashOrder(@PathVariable("timeStr") String timeStr) {
+        Map<Long, String> phoneMap = new HashMap<>();
+        long startTime = DateUtil.parse(timeStr).getTime();
+        List<ConsumerPhoneDTO> selfList = orderService.chjOrderTotal(1, startTime);
+        if (CollectionUtil.isNotEmpty(selfList)) {
+            for (int i = 0; i < selfList.size(); i++) {
+                ConsumerPhoneDTO consumerPhoneDTO = selfList.get(i);
+                Long consumerId = consumerPhoneDTO.getConsumerId();
+                String phone = consumerPhoneDTO.getPhone();
+                List<UtConsump> utConsumpList = orderService.findCHJOrderByPage(1, startTime, consumerId);
+                if (CollectionUtil.isNotEmpty(utConsumpList)) {
+                    String searchPhone = "";
+                    if (StrUtil.isNotBlank(phone)) {
+                        searchPhone = phone;
+                    } else {
+                        UtConsumer utConsumer = chjUtConsumerService.getUtConsumerById(consumerId.longValue());
+                        if (utConsumer != null && StrUtil.isNotBlank(utConsumer.getPhone())) {
+                            searchPhone = utConsumer.getPhone();
+                            phoneMap.put(consumerId, utConsumer.getPhone());
+                        }
+                    }
+                    if (StrUtil.isBlank(searchPhone)) {
+                        log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
+                    }
+                    Consumer consumer = consumerService.findByPhone(searchPhone);
+                    if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
+                        String consumerAccount = consumer.getUnionAccount();
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(1, map, startTime);
+                    }
+                }
+            }
+        }
+
+        List<ConsumerPhoneDTO> dustList = orderService.chjOrderTotal(2, startTime);
+        if (CollectionUtil.isNotEmpty(dustList)) {
+            for (int i = 0; i < dustList.size(); i++) {
+                ConsumerPhoneDTO consumerPhoneDTO = dustList.get(i);
+                Long consumerId = consumerPhoneDTO.getConsumerId();
+                String phone = consumerPhoneDTO.getPhone();
+                List<DushOrder> dushOrderList = orderService.findCHJOrderByPage(2, startTime, consumerId);
+                if (CollectionUtil.isNotEmpty(dushOrderList)) {
+                    String searchPhone = "";
+                    if (StrUtil.isNotBlank(phone)) {
+                        searchPhone = phone;
+                    } else {
+                        String mapPhone = phoneMap.get(consumerId);
+                        if (StrUtil.isNotBlank(mapPhone)) {
+                            searchPhone = mapPhone;
+                        } else {
+                            UtConsumer utConsumer = chjUtConsumerService.getUtConsumerById(consumerId.longValue());
+                            if (utConsumer != null && StrUtil.isNotBlank(utConsumer.getPhone())) {
+                                searchPhone = utConsumer.getPhone();
+                                phoneMap.put(consumerId, utConsumer.getPhone());
+                            }
+                        }
+                    }
+                    if (StrUtil.isBlank(searchPhone)) {
+                        log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
+                    }
+                    Consumer consumer = consumerService.findByPhone(searchPhone);
+                    if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
+                        String consumerAccount = consumer.getUnionAccount();
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(2, map, startTime);
+                    }
+                }
+            }
+        }
+
+        List<ConsumerPhoneDTO> autoList = orderService.chjOrderTotal(3, startTime);
+        if (CollectionUtil.isNotEmpty(autoList)) {
+            for (int i = 0; i < autoList.size(); i++) {
+                ConsumerPhoneDTO consumerPhoneDTO = autoList.get(i);
+                Long consumerId = consumerPhoneDTO.getConsumerId();
+                String phone = consumerPhoneDTO.getPhone();
+                List<AutoOrder> autoOrderList = orderService.findCHJOrderByPage(3, startTime, consumerId);
+                if (CollectionUtil.isNotEmpty(autoOrderList)) {
+                    String searchPhone = "";
+                    if (StrUtil.isNotBlank(phone)) {
+                        searchPhone = phone;
+                    } else {
+                        String mapPhone = phoneMap.get(consumerId);
+                        if (StrUtil.isNotBlank(mapPhone)) {
+                            searchPhone = mapPhone;
+                        } else {
+                            UtConsumer utConsumer = chjUtConsumerService.getUtConsumerById(consumerId.longValue());
+                            if (utConsumer != null && StrUtil.isNotBlank(utConsumer.getPhone())) {
+                                searchPhone = utConsumer.getPhone();
+                                phoneMap.put(consumerId, utConsumer.getPhone());
+                            }
+                        }
+                    }
+                    if (StrUtil.isBlank(searchPhone)) {
+                        log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
+                    }
+                    Consumer consumer = consumerService.findByPhone(searchPhone);
+                    if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
+                        String consumerAccount = consumer.getUnionAccount();
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.cbjUpdateOrder(3, map, startTime);
+                    }
+                }
+            }
+        }
+
+        List<ConsumerPhoneDTO> chargeList = orderService.chjOrderTotal(4, startTime);
+        if (CollectionUtil.isNotEmpty(chargeList)) {
+            for (int i = 0; i < chargeList.size(); i++) {
+                ConsumerPhoneDTO consumerPhoneDTO = chargeList.get(i);
+                Long consumerId = consumerPhoneDTO.getConsumerId();
+                String phone = consumerPhoneDTO.getPhone();
+                List<UtChargeLog> chargeOrderList = orderService.findCHJOrderByPage(4, startTime, consumerId);
+                if (CollectionUtil.isNotEmpty(chargeOrderList)) {
+                    String searchPhone = "";
+                    if (StrUtil.isNotBlank(phone)) {
+                        searchPhone = phone;
+                    } else {
+                        String mapPhone = phoneMap.get(consumerId);
+                        if (StrUtil.isNotBlank(mapPhone)) {
+                            searchPhone = mapPhone;
+                        } else {
+                            UtConsumer utConsumer = chjUtConsumerService.getUtConsumerById(consumerId.longValue());
+                            if (utConsumer != null && StrUtil.isNotBlank(utConsumer.getPhone())) {
+                                searchPhone = utConsumer.getPhone();
+                            }
+                        }
+                    }
+                    if (StrUtil.isBlank(searchPhone)) {
+                        log.error("出现错误手机号信息：consumerId：{}", consumerId);
+                        continue;
+                    }
+                    Consumer consumer = consumerService.findByPhone(searchPhone);
+                    if (consumer != null && StrUtil.isNotBlank(consumer.getUnionAccount())) {
+                        String consumerAccount = consumer.getUnionAccount();
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("consumerId", consumerId);
+                        map.put("consumerAccount", consumerAccount);
+                        map.put("phone", searchPhone);
+                        orderService.chjUpdateOrder(4, map, startTime);
+                    }
+                }
+            }
+        }
+        return BaseResponse.success();
+    }
+
+
+
 
 
     private int computeTotalPage(long total, int pageSize) {

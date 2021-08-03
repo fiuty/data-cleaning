@@ -36,8 +36,8 @@ public interface UtChargeLogRepository extends JpaRepository<UtChargeLog,Long>, 
 
 
     @Modifying
-    @Query(value = "update UtChargeLog set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")
-    Integer updateConsumerAccountByStartTime(@Param("id") Long id, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
+    @Query(value = "update UtChargeLog set consumerAccount = :consumerAccount where consumerId =:consumerId and createTime >= :startTime")
+    Integer updateConsumerAccountByStartTime(@Param("consumerId") Long consumerId, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
 
 
 

@@ -36,7 +36,25 @@ public interface OrderService {
     List findCBJOrderByPage(Integer type, Long startTime, Long consumerId);
 
 
-    void cbjUpdateOrder(Integer type, List<Map<String, Object>> dataList, Long startTime);
+    void cbjUpdateOrder(Integer type, Map<String, Object> map, Long startTime);
+
+
+
+    /**
+     * 查询时间之后的订单数据
+     * @param type  1.自助洗车  2.自助吸尘  3.全自动洗车 4.充值订单
+     * @param startTime
+     * @return
+     */
+    List<ConsumerPhoneDTO> chjOrderTotal(Integer type, Long startTime);
+
+
+    List findCHJOrderByPage(Integer type, Long startTime, Long consumerId);
+
+
+    void chjUpdateOrder(Integer type, Map<String, Object> map, Long startTime);
+
+
 
 
 
