@@ -21,7 +21,7 @@ import java.util.List;
  */
 public interface AutoOrderRepository  extends JpaSpecificationExecutor<AutoOrder>, JpaRepository<AutoOrder, Long>, CrudRepository<AutoOrder, Long> {
 
-    List<AutoOrder> findAllByConsumerId(Integer consumerId);
+    List<AutoOrder> findAllByConsumerId(Long consumerId);
 
     @Modifying
     @Query(value = "update AutoOrder set consumerAccount = :consumerAccount where id =:id")
@@ -33,7 +33,13 @@ public interface AutoOrderRepository  extends JpaSpecificationExecutor<AutoOrder
     @Query(value = "SELECT new com.chebianjie.datacleaning.dto.ConsumerPhoneDTO(consumerId, tel) FROM AutoOrder where consumerId is not null and createTime >= :startTime group by consumerId")
     List<ConsumerPhoneDTO> findCountByStartTime(@Param("startTime") Long startTime);
 
-    @Query(nativeQuery = true,value = "select * from AutoOrder  where consumerId is not null and createTime >= :startTime ")
+    @Query(nativeQuery = true,value = "select * from auto_order  where consumer_id = :consumerId and create_time >= :startTime")
     List<AutoOrder> findByStartTimePage(@Param("startTime") Long startTime);
+
+    @Modifying
+    @Query(value = "update AutoOrder set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")
+    Integer updateConsumerAccountByStartTime(@Param("id") Long id, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
+
+
 
 }

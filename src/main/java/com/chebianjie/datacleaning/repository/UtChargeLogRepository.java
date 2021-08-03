@@ -17,7 +17,7 @@ import java.util.List;
 public interface UtChargeLogRepository extends JpaRepository<UtChargeLog,Long>, JpaSpecificationExecutor<UtChargeLog> {
 
 
-    List<UtChargeLog> findAllByConsumerId(Integer consumerId);
+    List<UtChargeLog> findAllByConsumerId(Long consumerId);
 
 
     @Modifying
@@ -31,10 +31,13 @@ public interface UtChargeLogRepository extends JpaRepository<UtChargeLog,Long>, 
 
 
 
-    @Query(nativeQuery = true,value = "select * from UtChargeLog  where consumerId is not null and createTime >= :startTime ")
+    @Query(nativeQuery = true,value = "select * from ut_charge_log  where consumer_id = :consumerId and create_time >= :startTime")
     List<UtChargeLog> findByStartTimePage(@Param("startTime") Long startTime);
 
 
+    @Modifying
+    @Query(value = "update UtChargeLog set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")
+    Integer updateConsumerAccountByStartTime(@Param("id") Long id, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
 
 
 

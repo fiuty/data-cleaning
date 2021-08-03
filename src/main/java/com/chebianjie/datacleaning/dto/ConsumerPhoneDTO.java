@@ -11,11 +11,11 @@ import lombok.Data;
 
 public class ConsumerPhoneDTO {
 
-    private Integer consumerId;
+    private Long consumerId;
 
     private String phone;
 
-    public Integer getConsumerId() {
+    public Long getConsumerId() {
         return consumerId;
     }
 
@@ -23,12 +23,12 @@ public class ConsumerPhoneDTO {
         return phone;
     }
 
-    public ConsumerPhoneDTO(Integer consumerId, String phone) {
+    public ConsumerPhoneDTO(Long consumerId, String phone) {
         this.consumerId = consumerId;
         this.phone = phone;
     }
 
-    public ConsumerPhoneDTO(Integer consumerId) {
+    public ConsumerPhoneDTO(Long consumerId) {
         this.consumerId = consumerId;
     }
 }

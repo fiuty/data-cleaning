@@ -38,7 +38,7 @@ public class UtConsump implements Serializable {
      * 消费者ID（用户表consumer），如果是IC卡或者条形码消费则插入0
      */
     @Column(name = "consumer_id", nullable = false)
-    private Integer consumerId;
+    private Long consumerId;
 
 
     /** 消费者账号 */

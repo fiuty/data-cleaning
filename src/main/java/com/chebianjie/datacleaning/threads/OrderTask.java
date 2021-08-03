@@ -38,12 +38,12 @@ public class OrderTask implements Runnable {
 
     @Override
     public void run() {
-        if (type == 1) {
-            orderService.cleaningCBJWashOrder(consumerId, phone, consumerAccount);
-        }
-        if (type == 2) {
-            orderService.cleaningCHJWashOrder(consumerId, phone, consumerAccount);
-        }
+//        if (type == 1) {
+//            orderService.cleaningCBJWashOrder(consumerId, phone, consumerAccount);
+//        }
+//        if (type == 2) {
+//            orderService.cleaningCHJWashOrder(consumerId, phone, consumerAccount);
+//        }
     }
 }
 

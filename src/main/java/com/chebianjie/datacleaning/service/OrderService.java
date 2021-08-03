@@ -4,6 +4,7 @@ package com.chebianjie.datacleaning.service;
 import com.chebianjie.datacleaning.dto.ConsumerPhoneDTO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: wpan
@@ -32,10 +33,10 @@ public interface OrderService {
     List<ConsumerPhoneDTO> cbjOrderTotal(Integer type, Long startTime);
 
 
-    List findCBJOrderByPage(Integer type, Long startTime, Integer consumerId);
+    List findCBJOrderByPage(Integer type, Long startTime, Long consumerId);
 
 
-    void cbjUpdateOrder(Integer type, List<Object> dataList);
+    void cbjUpdateOrder(Integer type, List<Map<String, Object>> dataList, Long startTime);
 
 
 

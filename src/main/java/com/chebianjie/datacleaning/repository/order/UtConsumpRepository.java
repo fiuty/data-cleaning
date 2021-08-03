@@ -35,8 +35,14 @@ public interface UtConsumpRepository extends JpaSpecificationExecutor<UtConsump>
 
 
 
-    @Query(nativeQuery = true,value = "select * from UtConsump  where consumerId = :consumerId and createTime >= :startTime ")
-    List<UtConsump> findByStartTimePage(@Param("startTime") Long startTime, @Param("consumerId") Integer consumerId);
+    @Query(nativeQuery = true,value = "select * from ut_consump  where consumer_id = :consumerId and create_time >= :startTime ")
+    List<UtConsump> findByStartTimePage(@Param("startTime") Long startTime, @Param("consumerId") Long consumerId);
+
+
+    @Modifying
+    @Query(value = "update UtConsump set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")
+    Integer updateConsumerAccountByStartTime(@Param("id") Long id, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
+
 
 
 }

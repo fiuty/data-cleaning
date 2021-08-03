@@ -20,7 +20,7 @@ import java.util.List;
 public interface DushOrderRepository extends JpaSpecificationExecutor<DushOrder>, JpaRepository<DushOrder, Long>, CrudRepository<DushOrder, Long> {
 
 
-    List<DushOrder> findAllByConsumerId(Integer consumerId);
+    List<DushOrder> findAllByConsumerId(Long consumerId);
 
     @Modifying
     @Query(value = "update DushOrder set consumerAccount = :consumerAccount where id =:id")
@@ -32,8 +32,14 @@ public interface DushOrderRepository extends JpaSpecificationExecutor<DushOrder>
     List<ConsumerPhoneDTO> findCountByStartTime(@Param("startTime") Long startTime);
 
 
-    @Query(nativeQuery = true,value = "select * from DushOrder  where consumerId is not null and createTime >= :startTime ")
+    @Query(nativeQuery = true,value = "select * from dush_order  where consumer_id = :consumerId and create_time >= :startTime")
     List<DushOrder> findByStartTimePage(@Param("startTime") Long startTime);
+
+    @Modifying
+    @Query(value = "update DushOrder set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")
+    Integer updateConsumerAccountByStartTime(@Param("id") Long id, @Param("consumerAccount") String consumerAccount, @Param("startTime") Long startTime);
+
+
 
 
 

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +61,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 自助吸尘
-        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId.intValue());
+        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(dushOrders)) {
             log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, dushOrders.size());
             for (DushOrder dushOrder : dushOrders) {
@@ -70,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 全自动洗车
-        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId.intValue());
+        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(autoOrders)) {
             log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, autoOrders.size());
             for (AutoOrder autoOrder : autoOrders) {
@@ -79,7 +80,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         // 充值订单
-        List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId.intValue());
+        List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utChargeLogList)) {
             log.info("清洗用户充值订单，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utChargeLogList.size());
             for (UtChargeLog utChargeLog : utChargeLogList) {
@@ -105,7 +106,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 自助吸尘
-        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId.intValue());
+        List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(dushOrders)) {
             log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, dushOrders.size());
             for (DushOrder dushOrder : dushOrders) {
@@ -114,7 +115,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 全自动洗车
-        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId.intValue());
+        List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(autoOrders)) {
             log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, autoOrders.size());
             for (AutoOrder autoOrder : autoOrders) {
@@ -123,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         // 充值订单
-        List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId.intValue());
+        List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utChargeLogList)) {
             log.info("清洗用户充值订单，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utChargeLogList.size());
             for (UtChargeLog utChargeLog : utChargeLogList) {
@@ -156,21 +157,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-
     @Override
     @DataSource(name = DataSourcesType.CBJ_ORDER)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List findCBJOrderByPage(Integer type, Long startTime, Integer consumerId) {
+    public List findCBJOrderByPage(Integer type, Long startTime, Long consumerId) {
         // type 1.自助洗车  2.自助吸尘  3.全自动洗车
         List resultList = null;
         if (type == 1) {
-            resultList =  utConsumpRepository.findByStartTimePage(startTime, consumerId);
+            resultList = utConsumpRepository.findByStartTimePage(startTime, consumerId);
         }
         if (type == 2) {
-            resultList =  dushOrderRepository.findByStartTimePage(startTime);
+            resultList = dushOrderRepository.findByStartTimePage(startTime);
         }
         if (type == 3) {
-            resultList =  autoOrderRepository.findByStartTimePage(startTime);
+            resultList = autoOrderRepository.findByStartTimePage(startTime);
         }
         if (type == 4) {
             resultList = utChargeLogRepository.findByStartTimePage(startTime);
@@ -181,11 +181,29 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @DataSource(name = DataSourcesType.CBJ_ORDER)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void cbjUpdateOrder(Integer type, List<Object> dataList) {
-        if(type == 1) {
-            List<UtConsump> saveAll = dataList.stream().map(item -> (UtConsump) item).collect(Collectors.toList());
-            System.out.println(saveAll);
+    public void cbjUpdateOrder(Integer type, List<Map<String, Object>> dataList, Long startTime) {
+        for (Map<String, Object> map : dataList) {
+            Long id = (Long) map.get("id");
+            String consumerAccount = (String) map.get("consumerAccount");
+            String phone = (String) map.get("phone");
+            if (type == 1) {
+                log.info("更新自助洗车订单：id：{}，phone：{}，consumerAccount：{}", id, phone, consumerAccount);
+                utConsumpRepository.updateConsumerAccountByStartTime(id, consumerAccount, startTime);
+            }
+            if (type == 2) {
+                log.info("更新自助吸尘订单：id：{}，phone：{}，consumerAccount：{}", id, phone, consumerAccount);
+                dushOrderRepository.updateConsumerAccountByStartTime(id, consumerAccount, startTime);
+            }
+            if (type == 3) {
+                log.info("更新全自动洗车订单：id：{}，phone：{}，consumerAccount：{}", id, phone, consumerAccount);
+                autoOrderRepository.updateConsumerAccountByStartTime(id, consumerAccount, startTime);
+            }
+            if (type == 4) {
+                log.info("更新用户充值订单：id：{}，phone：{}，consumerAccount：{}", id, phone, consumerAccount);
+                utChargeLogRepository.updateConsumerAccountByStartTime(id, consumerAccount, startTime);
+            }
         }
+
 
     }
 }
