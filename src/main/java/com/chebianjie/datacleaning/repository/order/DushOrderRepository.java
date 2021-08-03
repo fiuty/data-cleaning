@@ -23,8 +23,8 @@ public interface DushOrderRepository extends JpaSpecificationExecutor<DushOrder>
     List<DushOrder> findAllByConsumerId(Long consumerId);
 
     @Modifying
-    @Query(value = "update DushOrder set consumerAccount = :consumerAccount where id =:id")
-    Integer updateConsumerAccount(@Param("id") Long id, @Param("consumerAccount") String consumerAccount);
+    @Query(value = "update DushOrder set consumerAccount = :consumerAccount where consumerId =:consumerId")
+    Integer updateConsumerAccount(@Param("consumerId") Long consumerId, @Param("consumerAccount") String consumerAccount);
 
 
 
@@ -33,7 +33,7 @@ public interface DushOrderRepository extends JpaSpecificationExecutor<DushOrder>
 
 
     @Query(nativeQuery = true,value = "select * from dush_order  where consumer_id = :consumerId and create_time >= :startTime")
-    List<DushOrder> findByStartTimePage(@Param("startTime") Long startTime);
+    List<DushOrder> findByStartTimePage(@Param("startTime") Long startTime, @Param("consumerId") Long consumerId);
 
     @Modifying
     @Query(value = "update DushOrder set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")

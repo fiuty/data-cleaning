@@ -73,7 +73,7 @@ public class OrderController {
         int pageSize = 1000;
         int totalPage = computeTotalPage(totalCount, pageSize);
         Instant totalStartTime = Instant.now();
-        for (int i = 0; i < totalPage; i++) {
+        for (int i = 0; i < 1; i++) {
             totalSum++;
             List<Consumer> consumerList = consumerService.findAllByPage(i * pageSize, pageSize);
             Instant startTime = Instant.now();
@@ -163,7 +163,7 @@ public class OrderController {
                         List<Map<String, Object>> saveAll = new ArrayList<>(utConsumpList.size());
                         for (UtConsump utConsump : utConsumpList) {
                             Map<String, Object> map = new HashMap<>();
-                            map.put("id", utConsump.getId());
+                            map.put("consumerId", consumerId);
                             map.put("consumerAccount", consumerAccount);
                             map.put("phone", searchPhone);
                             saveAll.add(map);

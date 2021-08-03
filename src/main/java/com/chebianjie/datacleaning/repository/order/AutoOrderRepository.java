@@ -24,8 +24,8 @@ public interface AutoOrderRepository  extends JpaSpecificationExecutor<AutoOrder
     List<AutoOrder> findAllByConsumerId(Long consumerId);
 
     @Modifying
-    @Query(value = "update AutoOrder set consumerAccount = :consumerAccount where id =:id")
-    Integer updateConsumerAccount(@Param("id") Long id, @Param("consumerAccount") String consumerAccount);
+    @Query(value = "update AutoOrder set consumerAccount = :consumerAccount where consumerId =:consumerId")
+    Integer updateConsumerAccount(@Param("consumerId") Long consumerId, @Param("consumerAccount") String consumerAccount);
 
 
 
@@ -34,7 +34,7 @@ public interface AutoOrderRepository  extends JpaSpecificationExecutor<AutoOrder
     List<ConsumerPhoneDTO> findCountByStartTime(@Param("startTime") Long startTime);
 
     @Query(nativeQuery = true,value = "select * from auto_order  where consumer_id = :consumerId and create_time >= :startTime")
-    List<AutoOrder> findByStartTimePage(@Param("startTime") Long startTime);
+    List<AutoOrder> findByStartTimePage(@Param("startTime") Long startTime, @Param("consumerId") Long consumerId);
 
     @Modifying
     @Query(value = "update AutoOrder set consumerAccount = :consumerAccount where id =:id and createTime >= :startTime")

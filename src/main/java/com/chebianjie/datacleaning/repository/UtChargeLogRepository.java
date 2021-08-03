@@ -21,8 +21,8 @@ public interface UtChargeLogRepository extends JpaRepository<UtChargeLog,Long>, 
 
 
     @Modifying
-    @Query(value = "update UtChargeLog set consumerAccount = :consumerAccount where id =:id")
-    Integer updateConsumerAccount(@Param("id") Long id, @Param("consumerAccount") String consumerAccount);
+    @Query(value = "update UtChargeLog set consumerAccount = :consumerAccount where consumerId =:consumerId")
+    Integer updateConsumerAccount(@Param("consumerId") Long consumerId, @Param("consumerAccount") String consumerAccount);
 
 
 
@@ -32,7 +32,7 @@ public interface UtChargeLogRepository extends JpaRepository<UtChargeLog,Long>, 
 
 
     @Query(nativeQuery = true,value = "select * from ut_charge_log  where consumer_id = :consumerId and create_time >= :startTime")
-    List<UtChargeLog> findByStartTimePage(@Param("startTime") Long startTime);
+    List<UtChargeLog> findByStartTimePage(@Param("startTime") Long startTime, @Param("consumerId") Long consumerId);
 
 
     @Modifying

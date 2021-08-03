@@ -44,6 +44,23 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UtChargeLogRepository utChargeLogRepository;
 
+    private static int cbjSelfTotal = 0;
+
+    private static int cbjDustTotal = 0;
+
+    private static int cbjAutoTotal = 0;
+
+    private static int cbjChargeTotal = 0;
+
+    private static int chjSelfTotal = 0;
+
+    private static int chjDustTotal = 0;
+
+    private static int chjAutoTotal = 0;
+
+    private static int chjChargeTotal = 0;
+
+
 
     @Override
     @DataSource(name = DataSourcesType.CBJ_ORDER)
@@ -54,40 +71,31 @@ public class OrderServiceImpl implements OrderService {
         List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
-            for (UtConsump utConsump : utConsumps) {
-                Integer updateResult = utConsumpRepository.updateConsumerAccount(utConsump.getId(), consumerAccount);
-//                log.info("保存自助洗车订单结果：{}", updateResult);
-            }
+            Integer updateResult = utConsumpRepository.updateConsumerAccount(consumerId, consumerAccount);
+            cbjSelfTotal += updateResult;
         }
-
         // 自助吸尘
         List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(dushOrders)) {
             log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, dushOrders.size());
-            for (DushOrder dushOrder : dushOrders) {
-                Integer updateResult = dushOrderRepository.updateConsumerAccount(dushOrder.getId(), consumerAccount);
-//                log.info("保存自助吸尘订单结果：{}", updateResult);
-            }
+            Integer updateResult = dushOrderRepository.updateConsumerAccount(consumerId, consumerAccount);
+            cbjDustTotal += updateResult;
         }
-
         // 全自动洗车
         List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(autoOrders)) {
             log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, autoOrders.size());
-            for (AutoOrder autoOrder : autoOrders) {
-                Integer updateResult = autoOrderRepository.updateConsumerAccount(autoOrder.getId(), consumerAccount);
-//                log.info("保存自动洗车订单结果：{}", updateResult);
-            }
+            Integer updateResult = autoOrderRepository.updateConsumerAccount(consumerId, consumerAccount);
+            cbjAutoTotal += updateResult;
         }
         // 充值订单
         List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utChargeLogList)) {
             log.info("清洗用户充值订单，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utChargeLogList.size());
-            for (UtChargeLog utChargeLog : utChargeLogList) {
-                Integer updateResult = utChargeLogRepository.updateConsumerAccount(utChargeLog.getId(), consumerAccount);
-//                log.info("保存用户充值订单结果：{}", updateResult);
-            }
+            Integer updateResult = utChargeLogRepository.updateConsumerAccount(consumerId, consumerAccount);
+            cbjChargeTotal += updateResult;
         }
+        log.info("-------》车便捷清洗完成数量：自助：{}，吸尘：{}。全自动：{}，充值：{}", cbjSelfTotal, cbjDustTotal, cbjAutoTotal, cbjChargeTotal);
     }
 
 
@@ -99,39 +107,31 @@ public class OrderServiceImpl implements OrderService {
         List<UtConsump> utConsumps = utConsumpRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utConsumps)) {
             log.info("清洗用户自助洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utConsumps.size());
-            for (UtConsump utConsump : utConsumps) {
-                Integer updateResult = utConsumpRepository.updateConsumerAccount(utConsump.getId(), consumerAccount);
-//                log.info("保存自助洗车订单结果：{}", updateResult);
-            }
+            Integer updateResult = utConsumpRepository.updateConsumerAccount(consumerId, consumerAccount);
+            chjSelfTotal += updateResult;
         }
-
         // 自助吸尘
         List<DushOrder> dushOrders = dushOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(dushOrders)) {
             log.info("清洗用户自助吸尘，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, dushOrders.size());
-            for (DushOrder dushOrder : dushOrders) {
-                Integer updateResult = dushOrderRepository.updateConsumerAccount(dushOrder.getId(), consumerAccount);
-            }
+            Integer updateResult = dushOrderRepository.updateConsumerAccount(consumerId, consumerAccount);
+            chjDustTotal += updateResult;
         }
-
         // 全自动洗车
         List<AutoOrder> autoOrders = autoOrderRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(autoOrders)) {
             log.info("清洗用户全自动洗车，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, autoOrders.size());
-            for (AutoOrder autoOrder : autoOrders) {
-                Integer updateResult = autoOrderRepository.updateConsumerAccount(autoOrder.getId(), consumerAccount);
-//                log.info("保存自动洗车订单结果：{}", updateResult);
-            }
+            Integer updateResult = autoOrderRepository.updateConsumerAccount(consumerId, consumerAccount);
+            chjAutoTotal += updateResult;
         }
         // 充值订单
         List<UtChargeLog> utChargeLogList = utChargeLogRepository.findAllByConsumerId(consumerId);
         if (CollectionUtil.isNotEmpty(utChargeLogList)) {
             log.info("清洗用户充值订单，用户id：{}，手机号：{}，唯一标识：{},数量：{}", consumerId, phone, consumerAccount, utChargeLogList.size());
-            for (UtChargeLog utChargeLog : utChargeLogList) {
-                Integer updateResult = utChargeLogRepository.updateConsumerAccount(utChargeLog.getId(), consumerAccount);
-//                log.info("保存用户充值订单结果：{}", updateResult);
-            }
+            Integer updateResult = utChargeLogRepository.updateConsumerAccount(consumerId, consumerAccount);
+            chjChargeTotal += updateResult;
         }
+        log.info("-------》车惠捷清洗完成数量：自助：{}，吸尘：{}，全自动：{}，充值：{}", chjSelfTotal, chjDustTotal, chjAutoTotal, chjChargeTotal);
     }
 
 
@@ -167,13 +167,13 @@ public class OrderServiceImpl implements OrderService {
             resultList = utConsumpRepository.findByStartTimePage(startTime, consumerId);
         }
         if (type == 2) {
-            resultList = dushOrderRepository.findByStartTimePage(startTime);
+            resultList = dushOrderRepository.findByStartTimePage(startTime, consumerId);
         }
         if (type == 3) {
-            resultList = autoOrderRepository.findByStartTimePage(startTime);
+            resultList = autoOrderRepository.findByStartTimePage(startTime, consumerId);
         }
         if (type == 4) {
-            resultList = utChargeLogRepository.findByStartTimePage(startTime);
+            resultList = utChargeLogRepository.findByStartTimePage(startTime, consumerId);
         }
         return resultList;
     }

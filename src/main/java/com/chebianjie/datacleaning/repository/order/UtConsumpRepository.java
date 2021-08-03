@@ -25,8 +25,8 @@ public interface UtConsumpRepository extends JpaSpecificationExecutor<UtConsump>
     List<UtConsump> findAllByConsumerId(Long consumerId);
 
     @Modifying
-    @Query(value = "update UtConsump set consumerAccount = :consumerAccount where id =:id")
-    Integer updateConsumerAccount(@Param("id") Long id, @Param("consumerAccount") String consumerAccount);
+    @Query(value = "update UtConsump set consumerAccount = :consumerAccount where consumerId =:consumerId")
+    Integer updateConsumerAccount(@Param("consumerId") Long consumerId, @Param("consumerAccount") String consumerAccount);
 
 
 
