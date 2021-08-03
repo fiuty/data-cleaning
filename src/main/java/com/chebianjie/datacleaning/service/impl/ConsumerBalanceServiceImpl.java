@@ -67,6 +67,23 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
 
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void updateConsumerBalance(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer) {
+        //真实余额
+        ConsumerBalance consumerRealBalance = consumerBalanceRepository.findOneByConsumerIdAndBalanceType(consumer.getId(), BalanceType.REAL_BALANCE);
+        //赠送余额
+        ConsumerBalance consumerGiveBalance = consumerBalanceRepository.findOneByConsumerIdAndBalanceType(consumer.getId(), BalanceType.GIVE_BALANCE);
+        log.info("[更新余额 begin] 用户: {} 真实余额:{} 赠送余额:{}, 变更1: {} 变更2: {}", consumer, consumerRealBalance, consumerGiveBalance, cbjUtConsumer, chjUtConsumer);
+        //更新余额
+        updateConsumerBalance(consumerRealBalance, cbjUtConsumer, chjUtConsumer);
+        updateConsumerBalance(consumerGiveBalance, cbjUtConsumer, chjUtConsumer);
+        //更新数据库
+        consumerBalanceRepository.save(consumerRealBalance);
+        consumerBalanceRepository.save(consumerGiveBalance);
+        log.info("[更新余额 end] rst1: {} rst2: {}", consumerRealBalance, consumerGiveBalance);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
     public List<ConsumerBalance>  findByUnionAccount(String unionAccount) {
         return consumerBalanceRepository.findByUnionAccount(unionAccount);
     }
@@ -106,6 +123,18 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
     }
 
     /**
+     * 更新用户余额数据
+     * @param consumerBalance
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     * @return
+     */
+    private ConsumerBalance updateConsumerBalance(ConsumerBalance consumerBalance, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer){
+        consumerBalance.setValue(fixBalanceValue(consumerBalance.getBalanceType(), cbjUtConsumer, chjUtConsumer));
+        return consumerBalance;
+    }
+
+    /**
      * 根据入参计算余额数值
      * @param balanceType
      * @param cbjUtConsumer
@@ -133,4 +162,5 @@ public class ConsumerBalanceServiceImpl extends AbstractBaseServiceImpl implemen
     public Map<String, List<ConsumerBalance>> batchFindByUnionAccount(List<String> unionAccounts) {
         return consumerBalanceRepository.findAllByUnionAccountIn(unionAccounts).stream().collect(Collectors.groupingBy(ConsumerBalance::getUnionAccount));
     }
+
 }

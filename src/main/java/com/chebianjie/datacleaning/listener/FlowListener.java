@@ -1,18 +1,29 @@
 package com.chebianjie.datacleaning.listener;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.chebianjie.datacleaning.common.annotation.DataSource;
 import com.chebianjie.datacleaning.common.enums.DataSourcesType;
 import com.chebianjie.datacleaning.constants.RabbitMqConstants;
+import com.chebianjie.datacleaning.domain.Consumer;
+import com.chebianjie.datacleaning.domain.UtConsumer;
 import com.chebianjie.datacleaning.domain.UtUserTotalFlow;
+import com.chebianjie.datacleaning.domain.enums.Platform;
+import com.chebianjie.datacleaning.service.CbjUtConsumerService;
+import com.chebianjie.datacleaning.service.ChjUtConsumerService;
+import com.chebianjie.datacleaning.service.ConsumerBalanceService;
+import com.chebianjie.datacleaning.service.ConsumerService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author zhengdayue
@@ -22,11 +33,45 @@ import java.io.IOException;
 @Component
 public class FlowListener {
 
+    @Autowired
+    private CbjUtConsumerService cbjUtConsumerService;
+
+    @Autowired
+    private ChjUtConsumerService chjUtConsumerService;
+
+    @Autowired
+    private ConsumerService consumerService;
+
+    @Autowired
+    private ConsumerBalanceService consumerBalanceService;
+
     @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_FLOW_QUEUE, containerFactory = "singleListenerContainerManual")
     @RabbitHandler
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void consume(UtUserTotalFlow message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
         try {
+            //监听流水清洗用户余额 - begin
+            UtConsumer curUtConsumer = null;
+            //获取utconsumer
+            if(message.getPlatform().equals(Platform.CHEBIANJIE)){
+                curUtConsumer = cbjUtConsumerService.getUtConsumerById(message.getUid());
+            }else if(message.getPlatform().equals(Platform.CHEHUIJIE)){
+                curUtConsumer = chjUtConsumerService.getUtConsumerById(message.getUid());
+            }
+            //判断unionid是否为空
+            if(curUtConsumer != null && StrUtil.isNotBlank(curUtConsumer.getUnionid())) {
+                //获取新合并用户
+                Consumer consumer = consumerService.findByWechatUnionId(curUtConsumer.getUnionid());
+                //获取车便捷旧用户数据
+                List<UtConsumer> cbjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
+                UtConsumer cbjUtConsumer = CollectionUtil.isEmpty(cbjUtConsumerList) ? null : cbjUtConsumerList.get(0);
+                //获取车惠捷旧用户数据
+                List<UtConsumer> chjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
+                UtConsumer chjUtConsumer = CollectionUtil.isEmpty(chjUtConsumerList) ? null : chjUtConsumerList.get(0);
+                //清洗余额
+                consumerBalanceService.updateConsumerBalance(consumer, cbjUtConsumer, chjUtConsumer);
+            }
+            ////监听流水清洗用户余额 - end
 
             //处理成功
             channel.basicAck(tag, false);

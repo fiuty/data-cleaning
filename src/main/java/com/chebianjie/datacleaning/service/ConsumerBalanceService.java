@@ -10,7 +10,21 @@ import java.util.Map;
 
 public interface ConsumerBalanceService {
 
+    /**
+     * 合并创建新用户余额
+     * @param consumer
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     */
     void mergeByConsumer(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer);
+
+    /**
+     * 更新用户余额
+     * @param consumer
+     * @param cbjUtConsumer
+     * @param chjUtConsumer
+     */
+    void updateConsumerBalance(Consumer consumer, UtConsumer cbjUtConsumer, UtConsumer chjUtConsumer);
 
     List<ConsumerBalance> findByUnionAccount(String unionAccount);
 
