@@ -52,30 +52,41 @@ public class FlowListener {
         try {
             //监听流水清洗用户余额 - begin
             UtConsumer curUtConsumer = null;
+            boolean flag = false;
+            long cbjTime = 1627630256344L;
+            long chjTime = 1627630468090L;
             //获取utconsumer
             if(message.getPlatform().equals(Platform.CHEBIANJIE)){
                 curUtConsumer = cbjUtConsumerService.getUtConsumerById(message.getUid());
+                if(curUtConsumer.getCreatetime() <= cbjTime){
+                    flag = true;
+                }
             }else if(message.getPlatform().equals(Platform.CHEHUIJIE)){
                 curUtConsumer = chjUtConsumerService.getUtConsumerById(message.getUid());
-            }
-            //判断unionid是否为空
-            if(curUtConsumer != null && StrUtil.isNotBlank(curUtConsumer.getPhone())) {
-                //获取新合并用户
-                Consumer consumer = consumerService.findByPhone(curUtConsumer.getPhone());
-                if(consumer != null && StrUtil.isNotBlank(consumer.getPhone())) {
-                    //获取车便捷旧用户数据
-                    List<UtConsumer> cbjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
-                    UtConsumer cbjUtConsumer = CollectionUtil.isEmpty(cbjUtConsumerList) ? null : cbjUtConsumerList.get(0);
-                    //获取车惠捷旧用户数据
-                    List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
-                    UtConsumer chjUtConsumer = CollectionUtil.isEmpty(chjUtConsumerList) ? null : chjUtConsumerList.get(0);
-                    //清洗余额
-                    consumerBalanceService.updateConsumerBalance(consumer, cbjUtConsumer, chjUtConsumer);
-                }else{
-                    log.error("[监听流水更新余额失败1] message: {}", message);
+                if(curUtConsumer.getCreatetime() <= chjTime){
+                    flag = true;
                 }
-            }else{
-                log.error("[监听流水更新余额失败2] message: {}", message);
+            }
+            if(flag) {
+                //判断unionid是否为空
+                if (curUtConsumer != null && StrUtil.isNotBlank(curUtConsumer.getPhone())) {
+                    //获取新合并用户
+                    Consumer consumer = consumerService.findByPhone(curUtConsumer.getPhone());
+                    if (consumer != null && StrUtil.isNotBlank(consumer.getPhone())) {
+                        //获取车便捷旧用户数据
+                        List<UtConsumer> cbjUtConsumerList = cbjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
+                        UtConsumer cbjUtConsumer = CollectionUtil.isEmpty(cbjUtConsumerList) ? null : cbjUtConsumerList.get(0);
+                        //获取车惠捷旧用户数据
+                        List<UtConsumer> chjUtConsumerList = chjUtConsumerService.getUtConsumerListByAccount(consumer.getPhone());
+                        UtConsumer chjUtConsumer = CollectionUtil.isEmpty(chjUtConsumerList) ? null : chjUtConsumerList.get(0);
+                        //清洗余额
+                        consumerBalanceService.updateConsumerBalance(consumer, cbjUtConsumer, chjUtConsumer);
+                    } else {
+                        log.error("[监听流水更新余额失败1] message: {}", message);
+                    }
+                } else {
+                    log.error("[监听流水更新余额失败2] message: {}", message);
+                }
             }
             //监听流水清洗用户余额 - end
 
