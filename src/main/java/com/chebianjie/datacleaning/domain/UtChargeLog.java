@@ -45,11 +45,12 @@ public class UtChargeLog implements Serializable {
      */
     @ApiModelProperty(value = "获取人uid(旧系统的ims_jy_cbj2_user.uid，新系统的ut_consumer.uid)，为了兼容旧系统而保留的uid")
     @Column(name = "consumer_id")
-    private Long consumerId;
+    private Integer consumerId;
 
 
     /** 消费者账号 */
-    @Transient
+//    @Transient
+    @Column(name = "consumer_account")
     private String consumerAccount;
 
     /**

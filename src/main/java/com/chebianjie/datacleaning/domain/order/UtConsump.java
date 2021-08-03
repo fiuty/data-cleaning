@@ -42,6 +42,7 @@ public class UtConsump implements Serializable {
 
 
     /** 消费者账号 */
+    @Column(name = "consumer_account")
     private String consumerAccount;
 
     /**
@@ -275,13 +276,6 @@ public class UtConsump implements Serializable {
      * 大客户id
      */
     private Long agentId;
-
-    /**
-     * 订单业务扩展表id
-     */
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "order_business_id")
-    private OrderBusiness orderBusiness;
 
     /**
      * 洗车订单是否评价

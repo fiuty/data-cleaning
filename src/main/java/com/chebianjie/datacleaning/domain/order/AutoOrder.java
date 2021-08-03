@@ -59,7 +59,7 @@ public class AutoOrder extends AbstractEntity implements Serializable {
     /** 订单进行状态，0 未完成 -1 已取消 1已完成  2 已结算 3 未启动机器 4 超时取消 */
     private Integer status;
     /** 消费者id */
-    private Long consumerId;
+    private Integer consumerId;
     /** 消费者手机号 */
     private String tel;
     /** 消费者账号*/

@@ -15,7 +15,7 @@ public class OrderTask implements Runnable {
 
     private OrderService orderService;
 
-    private Long consumerId;
+    private Integer consumerId;
 
     private String phone;
 
@@ -27,7 +27,7 @@ public class OrderTask implements Runnable {
     private Integer type;
 
 
-    public OrderTask(OrderService orderService, Long consumerId, String phone, String consumerAccount, Integer type) {
+    public OrderTask(OrderService orderService, Integer consumerId, String phone, String consumerAccount, Integer type) {
         this.orderService = orderService;
         this.consumerId = consumerId;
         this.phone = phone;
