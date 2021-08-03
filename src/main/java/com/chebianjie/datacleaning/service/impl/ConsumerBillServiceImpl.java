@@ -601,8 +601,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             log.info("车便捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", cbjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
 
+        DataSynTime chjDataSynTime = dataSynTimeRepository.findBySynType(3);
+        Long chjTimeFrom = chjDataSynTime.getLastTime();
         //车惠捷分页
-        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(timeFrom, toEpochMilli(timeTo));
+        int chjTotal = utUserTotalFlowService.chjCountByCreateTimeBetween(chjTimeFrom, toEpochMilli(timeTo));
         int chjTotalPage = computeTotalPage(chjTotal);
         for (int pageNumber = 0; pageNumber <= chjTotalPage; pageNumber++) {
             Instant now = Instant.now();
@@ -611,8 +613,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
             Instant end = Instant.now();
             log.info("车惠捷用户流水增量清洗,总页数:{},第：{}页,总用时：{} s", chjTotalPage, pageNumber + 1, Duration.between(now, end).toMillis()/1000);
         }
+        chjDataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTime.setLastTime(toEpochMilli(timeTo));
         dataSynTimeService.updateDataSynTime(dataSynTime);
+        dataSynTimeService.updateDataSynTime(chjDataSynTime);
         log.info("同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
     }
 
