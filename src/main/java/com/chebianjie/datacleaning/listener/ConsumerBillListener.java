@@ -70,7 +70,7 @@ public class ConsumerBillListener {
     @Autowired
     private BatchSaveService batchSaveService;
 
-    @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_BILL_QUEUE, containerFactory = "singleListenerContainerManual")
+    @RabbitListener(queues = RabbitMqConstants.DATA_CLEAN_BILL_QUEUE, containerFactory = "multiListenerContainer")
     @RabbitHandler
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public void conusmeMsg(UtUserTotalFlow message, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) Long tag) throws IOException {
@@ -223,18 +223,7 @@ public class ConsumerBillListener {
     }
 
     public Consumer getConsumer(UtUserTotalFlow message, ConsumerLog consumerLog) {
-        Consumer consumer = null;
-        if (consumerLog.getUnionid() != null) {
-            consumer = consumerService.findByWechatUnionId(consumerLog.getUnionid());
-        }
-        if (consumer == null) {
-            if (consumerLog.getCbjAccount() != null) {
-                consumer = consumerService.findByPhone(consumerLog.getCbjAccount());
-            }
-            if (consumer == null) {
-                consumer = consumerService.findByPhone(consumerLog.getChjAccount());
-            }
-        }
+        Consumer consumer = consumerService.findById(consumerLog.getConsumerId());
         if (consumer == null) {
             log.error("查询不到用户,platform：{},uid:{}", message.getPlatform(), message.getUid());
             throw new InvalidParameterException("查询不到用户");
