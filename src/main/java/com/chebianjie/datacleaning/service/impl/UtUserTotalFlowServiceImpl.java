@@ -115,6 +115,18 @@ public class UtUserTotalFlowServiceImpl implements UtUserTotalFlowService {
         log.info("用户余额清洗-同步增量,车便捷流水增量cbjTotal：{}，车惠捷流水增量chjTotal：{}，起始时间timeFrom：{}，截止时间timeTo：{}", cbjTotal, chjTotal, timeFrom, timeTo);
     }
 
+    @Override
+    @DataSource(name = DataSourcesType.MASTER)
+    public UtUserTotalFlow cbjFindById(Long id) {
+        return utUserTotalFlowRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.SLAVE)
+    public UtUserTotalFlow chjFindById(Long id) {
+        return utUserTotalFlowRepository.findById(id).orElse(null);
+    }
+
     private void convertAndSend(List<UtUserTotalFlow> cbjUtUserTotalFlows, Platform platform) {
         cbjUtUserTotalFlows.forEach(flow -> {
             flow.setPlatform(platform);

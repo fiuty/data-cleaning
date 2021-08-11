@@ -129,7 +129,7 @@ public class ConsumerBillListener {
                     String billIdentify = lastConsumerBill.getBillIdentify();
                     List<ConsumerBillChangeDetail> lastBillDetails = consumerBillDetailSaveService.findByBillIdentify(billIdentify);
                     Map<BalanceType, ConsumerBillChangeDetail> lastBalanceMap = lastBillDetails.stream().collect(Collectors.toMap(ConsumerBillChangeDetail::getBalanceType, Function.identity()));
-                    Integer balance = getAfterChangeValue(lastBalanceMap.get(BalanceType.GIVE_BALANCE));
+                    Integer balance = getAfterChangeValue(lastBalanceMap.get(BalanceType.REAL_BALANCE));
                     Integer giveBalance = getAfterChangeValue(lastBalanceMap.get(BalanceType.GIVE_BALANCE));
                     Integer changeBalance = NumberUtil.addIfNull(message.getNewBalance(), NumberUtil.negativeIfNull(message.getOldBalance()));
                     Integer changeGiveBalance = NumberUtil.addIfNull(message.getNewGiveBalance(), NumberUtil.negativeIfNull(message.getOldGiveBalance()));

@@ -172,5 +172,21 @@ public class RabbitmqConfig {
     public Binding flowBinding() {
         return BindingBuilder.bind(flowQueue()).to(flowDirectExchange()).with(RabbitMqConstants.DATA_CLEAN_FLOW_ROUTING_KEY);
     }
+
+    //addBillLog
+    @Bean
+    public Queue addBillLogQueue() {
+        return new Queue(RabbitMqConstants.ADD_BILL_LOG_QUEUE);
+    }
+
+    @Bean
+    public DirectExchange addBillLogExchange() {
+        return new DirectExchange(RabbitMqConstants.ADD_BILL_LOG_EXCHANGE, true, true);
+    }
+
+    @Bean
+    public Binding addBillLogBinding() {
+        return BindingBuilder.bind(addBillLogQueue()).to(addBillLogExchange()).with(RabbitMqConstants.ADD_BILL_LOG_ROUTING_KEY);
+    }
 }
 

@@ -9,6 +9,8 @@ import com.chebianjie.datacleaning.service.AddBillLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author zhengdayue
  * @date: 2021-07-07
@@ -35,4 +37,17 @@ public class AddBillLogServiceImpl implements AddBillLogService {
         addBillLog.setJson(json);
         addBillLogRepository.save(addBillLog);
     }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public List<AddBillLog> findAllByPage(int pageNumber, int pageSize) {
+        return addBillLogRepository.findAllByPage(pageNumber, pageSize);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public int countByIdLessThanEqual(Long id) {
+        return addBillLogRepository.countByIdLessThanEqual(id);
+    }
+
 }

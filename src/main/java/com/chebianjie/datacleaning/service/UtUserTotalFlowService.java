@@ -27,4 +27,7 @@ public interface UtUserTotalFlowService {
      */
     void utUserTotalFlowJob();
 
+    UtUserTotalFlow cbjFindById(Long id);
+
+    UtUserTotalFlow chjFindById(Long id);
 }

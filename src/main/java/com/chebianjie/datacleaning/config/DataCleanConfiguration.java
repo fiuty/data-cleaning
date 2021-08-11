@@ -57,6 +57,11 @@ public class DataCleanConfiguration {
      */
     private int fixChjConsumerStartPage;
 
+    /**
+     * handle fail addBillLog分页起始点
+     */
+    private int failAddBillLogPage;
+
     public LocalDateTime getFlowConsumerTime() {
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.parse(flowConsumerTime, df);

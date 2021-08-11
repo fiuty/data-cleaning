@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -20,4 +21,5 @@ public interface ConsumerBillRepository extends JpaRepository<ConsumerBill, Long
     @Query(nativeQuery = true, value = "select * from consumer_bill where union_account = :unionAccount order by create_time desc limit 0,1")
     ConsumerBill findAllByUnionAccount(@Param("unionAccount") String unionAccount);
 
+    List<ConsumerBill> findAllByUnionAccountAndCreateTimeGreaterThanOrderByCreateTimeDesc(String consumerAccount, LocalDateTime time);
 }

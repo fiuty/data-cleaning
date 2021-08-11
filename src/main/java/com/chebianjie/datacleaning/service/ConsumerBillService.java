@@ -1,9 +1,6 @@
 package com.chebianjie.datacleaning.service;
 
-import com.chebianjie.datacleaning.domain.Consumer;
-import com.chebianjie.datacleaning.domain.ConsumerBill;
-import com.chebianjie.datacleaning.domain.ConsumerBillChangeDetail;
-import com.chebianjie.datacleaning.domain.UtUserTotalFlow;
+import com.chebianjie.datacleaning.domain.*;
 import com.chebianjie.datacleaning.domain.enums.BalanceType;
 import com.chebianjie.datacleaning.domain.enums.Platform;
 
@@ -34,4 +31,8 @@ public interface ConsumerBillService {
     void handleFail();
 
     ConsumerBill findAllByUnionAccount(String unionAccount);
+
+    void handleFailDetail();
+
+    void handleFailOne(Long id);
 }

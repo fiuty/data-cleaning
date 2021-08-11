@@ -24,10 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.security.InvalidParameterException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -81,6 +78,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
 
     @Autowired
     private BatchSaveService batchSaveService;
+
+    @Autowired
+    private FailConsumerBillLogRepository failConsumerBillLogRepository;
+
+    @Autowired
+    private FailConsumerBillLogService failConsumerBillLogService;
 
     @Override
     public void cleanOne(int pageNumber, int pageSize) {
@@ -259,9 +262,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         BillType billType = consumerBill.getBillType();
         //普通洗车/未启动机器代洗(保存余额变更无变更。)
         if (billType == BillType.WASH) {
-            return (consumerBill.getOrderPaymentType() == OrderPaymentType.ORDINARY) ||  (Objects.equals(consumerBill.getOrderStatus(),OrderStatus.UNSTART) && Objects.equals(consumerBill.getOrderPaymentType(),OrderPaymentType.SERVER));
+            return (consumerBill.getOrderPaymentType() == OrderPaymentType.ORDINARY && consumerBill.getOrderStatus() == OrderStatus.FINISH);
             //充值、商城、退款、门店
         } else if (billType == BillType.CHARGE || billType == BillType.MALL || billType == BillType.REFUND || billType == BillType.STORE) {
+            if (billType == BillType.CHARGE && consumerBill.getOrderStatus() == OrderStatus.CHARGE_READY) {
+                return false;
+            }
             return true;
             //购买消费卡
         }else if(billType == BillType.CONSUMER_CARD) {
@@ -275,10 +281,10 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     public ConsumerBillChangeDetail fillInfoChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
         ConsumerBillChangeDetail detail = new ConsumerBillChangeDetail();
         detail.setBillIdentify(billIdentify);
-        detail.setPreChangeValue(NumberUtil.addIfNull(afterChangeValue, NumberUtil.negativeIfNull(changeValue)));
+        detail.setPreChangeValue(afterChangeValue);
         detail.setChangeValue(changeValue);
         detail.setBalanceType(balanceType);
-        detail.setAfterChangeValue(afterChangeValue);
+        detail.setAfterChangeValue(NumberUtil.addIfNull(afterChangeValue, changeValue));
         detail.setPlatform(platform);
         return detail;
     }
@@ -663,5 +669,98 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public ConsumerBill findAllByUnionAccount(String unionAccount) {
         return consumerBillRepository.findAllByUnionAccount(unionAccount);
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void handleFailDetail() {
+        List<FailConsumerBillLog> all = failConsumerBillLogService.findAll();
+        LocalDateTime time = LocalDateTime.of(2021, Month.JULY, 30, 0, 0, 0);
+        for (FailConsumerBillLog failConsumerBillLog : all) {
+            List<ConsumerBill> consumerBills = consumerBillRepository.findAllByUnionAccountAndCreateTimeGreaterThanOrderByCreateTimeDesc(failConsumerBillLog.getConsumerAccount(), time);
+            Map<String, ConsumerBill> billMap = consumerBills.stream().collect(Collectors.toMap(ConsumerBill::getBillIdentify, Function.identity()));
+            List<String> billIdentifies = consumerBills.stream().map(ConsumerBill::getBillIdentify).collect(Collectors.toList());
+            List<ConsumerBillChangeDetail> consumerBillChangeDetails = consumerBillChangeDetailRepository.findAllByBillIdentifyIn(billIdentifies);
+            Map<String, List<ConsumerBillChangeDetail>> detailMap = consumerBillChangeDetails.stream().collect(Collectors.groupingBy(ConsumerBillChangeDetail::getBillIdentify));
+            List<ConsumerBalance> consumerBalances = consumerBalanceService.findByUnionAccount(failConsumerBillLog.getConsumerAccount());
+            if (CollectUtil.collectionIsEmpty(consumerBalances)) {
+                log.error("用户余额为空,consumerAccount:{}", failConsumerBillLog.getConsumerAccount());
+                throw new InvalidParameterException("用户余额为空");
+            }
+            Map<BalanceType, ConsumerBalance> balanceMap = consumerBalances.stream().collect(Collectors.toMap(ConsumerBalance::getBalanceType, Function.identity()));
+            Integer consumerBalance = getBalance(balanceMap.get(BalanceType.REAL_BALANCE));
+            Integer consumerGiveBalance = getBalance(balanceMap.get(BalanceType.GIVE_BALANCE));
+            updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE, NumberUtil.getIfNull(consumerBalance));
+            updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE, NumberUtil.getIfNull(consumerGiveBalance));
+            for (String billIdentify : billIdentifies) {
+                ConsumerBill consumerBill = billMap.get(billIdentify);
+                //涉及余额变更
+                if (isBalanceChange(consumerBill)) {
+                    List<ConsumerBillChangeDetail> details = detailMap.get(billIdentify);
+                    Integer currentBalance = getConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE);
+                    Integer currentGiveBalance = getConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE);
+                    for (ConsumerBillChangeDetail consumerBillChangeDetail : details) {
+                        BalanceType balanceType = consumerBillChangeDetail.getBalanceType();
+                        if (balanceType == BalanceType.REAL_BALANCE) {
+                            consumerBillChangeDetail.setAfterChangeValue(currentBalance);
+                            consumerBillChangeDetail.setPreChangeValue(consumerBillChangeDetail.getAfterChangeValue() - consumerBillChangeDetail.getChangeValue());
+                            //当前pre为上一笔的after
+                            updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE, NumberUtil.getIfNull(consumerBillChangeDetail.getPreChangeValue()));
+                        } else if (balanceType == BalanceType.GIVE_BALANCE) {
+                            consumerBillChangeDetail.setAfterChangeValue(currentGiveBalance);
+                            consumerBillChangeDetail.setPreChangeValue(consumerBillChangeDetail.getAfterChangeValue() - consumerBillChangeDetail.getChangeValue());
+                            updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE, NumberUtil.getIfNull(consumerBillChangeDetail.getPreChangeValue()));
+                        }
+                        consumerBillChangeDetailRepository.save(consumerBillChangeDetail);
+                    }
+                }
+            }
+            log.info("failConsumerBillLog处理完成，id：{}", failConsumerBillLog.getId());
+        }
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void handleFailOne(Long id) {
+        LocalDateTime time = LocalDateTime.of(2021, Month.JULY, 30, 0, 0, 0);
+        FailConsumerBillLog failConsumerBillLog = failConsumerBillLogRepository.findById(id).orElse(null);
+        List<ConsumerBill> consumerBills = consumerBillRepository.findAllByUnionAccountAndCreateTimeGreaterThanOrderByCreateTimeDesc(failConsumerBillLog.getConsumerAccount(), time);
+        Map<String, ConsumerBill> billMap = consumerBills.stream().collect(Collectors.toMap(ConsumerBill::getBillIdentify, Function.identity()));
+        List<String> billIdentifies = consumerBills.stream().map(ConsumerBill::getBillIdentify).collect(Collectors.toList());
+        List<ConsumerBillChangeDetail> consumerBillChangeDetails = consumerBillChangeDetailRepository.findAllByBillIdentifyIn(billIdentifies);
+        Map<String, List<ConsumerBillChangeDetail>> detailMap = consumerBillChangeDetails.stream().collect(Collectors.groupingBy(ConsumerBillChangeDetail::getBillIdentify));
+        List<ConsumerBalance> consumerBalances = consumerBalanceService.findByUnionAccount(failConsumerBillLog.getConsumerAccount());
+        if (CollectUtil.collectionIsEmpty(consumerBalances)) {
+            log.error("用户余额为空,consumerAccount:{}", failConsumerBillLog.getConsumerAccount());
+            throw new InvalidParameterException("用户余额为空");
+        }
+        Map<BalanceType, ConsumerBalance> balanceMap = consumerBalances.stream().collect(Collectors.toMap(ConsumerBalance::getBalanceType, Function.identity()));
+        Integer consumerBalance = getBalance(balanceMap.get(BalanceType.REAL_BALANCE));
+        Integer consumerGiveBalance = getBalance(balanceMap.get(BalanceType.GIVE_BALANCE));
+        updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE, NumberUtil.getIfNull(consumerBalance));
+        updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE, NumberUtil.getIfNull(consumerGiveBalance));
+        for (String billIdentify : billIdentifies) {
+            ConsumerBill consumerBill = billMap.get(billIdentify);
+            //涉及余额变更
+            if (isBalanceChange(consumerBill)) {
+                List<ConsumerBillChangeDetail> details = detailMap.get(billIdentify);
+                Integer currentBalance = getConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE);
+                Integer currentGiveBalance = getConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE);
+                for (ConsumerBillChangeDetail consumerBillChangeDetail : details) {
+                    BalanceType balanceType = consumerBillChangeDetail.getBalanceType();
+                    if (balanceType == BalanceType.REAL_BALANCE) {
+                        consumerBillChangeDetail.setAfterChangeValue(currentBalance);
+                        consumerBillChangeDetail.setPreChangeValue(consumerBillChangeDetail.getAfterChangeValue() - consumerBillChangeDetail.getChangeValue());
+                        //当前pre为上一笔的after
+                        updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.REAL_BALANCE, NumberUtil.getIfNull(consumerBillChangeDetail.getPreChangeValue()));
+                    } else if (balanceType == BalanceType.GIVE_BALANCE) {
+                        consumerBillChangeDetail.setAfterChangeValue(currentGiveBalance);
+                        consumerBillChangeDetail.setPreChangeValue(consumerBillChangeDetail.getAfterChangeValue() - consumerBillChangeDetail.getChangeValue());
+                        updateConsumerBalance(failConsumerBillLog.getConsumerAccount(), BalanceType.GIVE_BALANCE, NumberUtil.getIfNull(consumerBillChangeDetail.getPreChangeValue()));
+                    }
+                    consumerBillChangeDetailRepository.save(consumerBillChangeDetail);
+                }
+            }
+        }
     }
 }

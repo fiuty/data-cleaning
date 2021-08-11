@@ -36,5 +36,11 @@ public class RabbitMqConstants {
 
     public static final String DATA_CLEAN_FLOW_ROUTING_KEY = "data.clean.flow.routing.key";
 
+    //addBillLog
+    public static final String ADD_BILL_LOG_QUEUE = "add.bill.log.queue";
+
+    public static final String ADD_BILL_LOG_EXCHANGE = "add.bill.log.exchange";
+
+    public static final String ADD_BILL_LOG_ROUTING_KEY = "add.bill.log.routing.key";
 
 }
