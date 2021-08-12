@@ -3,7 +3,6 @@ package com.chebianjie.datacleaning.controller;
 import com.chebianjie.datacleaning.config.DataCleanConfiguration;
 import com.chebianjie.datacleaning.constants.RabbitMqConstants;
 import com.chebianjie.datacleaning.domain.AddBillLog;
-import com.chebianjie.datacleaning.domain.FailConsumerBillLog;
 import com.chebianjie.datacleaning.dto.AddBillLogMessage;
 import com.chebianjie.datacleaning.service.AddBillLogService;
 import com.chebianjie.datacleaning.service.ConsumerBillService;
@@ -14,6 +13,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
@@ -37,9 +37,6 @@ public class FailController {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
-    @Autowired
-    private FailConsumerBillLogService failConsumerBillLogService;
 
     @Autowired
     private ConsumerBillService consumerBillService;
@@ -72,6 +69,11 @@ public class FailController {
     @GetMapping("/handleFail/one")
     public void handleFailOne(Long id) {
         consumerBillService.handleFailOne(id);
+    }
+
+    @GetMapping("/fix/oldUtUserTotalFlow")
+    public void fixOldUtUserTotalFlow(@RequestParam("phone") String phone) {
+        consumerBillService.fixOldUtUserTotalFlow(phone);
     }
 
 }

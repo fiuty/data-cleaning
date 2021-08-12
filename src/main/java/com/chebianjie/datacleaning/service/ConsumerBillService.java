@@ -35,4 +35,6 @@ public interface ConsumerBillService {
     void handleFailDetail();
 
     void handleFailOne(Long id);
+
+    void fixOldUtUserTotalFlow(String phone);
 }

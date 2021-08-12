@@ -68,9 +68,6 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     private BillLogService billLogService;
 
     @Autowired
-    private DataSynTimeRepository dataSynTimeRepository;
-
-    @Autowired
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
@@ -84,6 +81,12 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
 
     @Autowired
     private FailConsumerBillLogService failConsumerBillLogService;
+
+    @Autowired
+    protected CbjUtConsumerService cbjUtConsumerService;
+
+    @Autowired
+    protected ChjUtConsumerService chjUtConsumerService;
 
     @Override
     public void cleanOne(int pageNumber, int pageSize) {
@@ -257,6 +260,25 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         return null;
     }
 
+    public List<ConsumerBillChangeDetail> handleFailBillDetail(ConsumerBill consumerBill, UtUserTotalFlow flow) {
+        if (isBalanceChange(consumerBill)) {
+            String unionAccount = consumerBill.getUnionAccount();
+            Integer balance = getConsumerBalance(unionAccount, BalanceType.REAL_BALANCE);
+            Integer giveBalance = getConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE);
+            Integer changeBalance = NumberUtil.addIfNull(flow.getNewBalance(), NumberUtil.negativeIfNull(flow.getOldBalance()));
+            Integer changeGiveBalance = NumberUtil.addIfNull(flow.getNewGiveBalance(), NumberUtil.negativeIfNull(flow.getOldGiveBalance()));
+            ConsumerBillChangeDetail balanceBillDetail = fillInfoFailChangeDetail(consumerBill.getBillIdentify(), balance, changeBalance, BalanceType.REAL_BALANCE, consumerBill.getPlatform());
+            ConsumerBillChangeDetail giveBalanceBillDetail = fillInfoFailChangeDetail(consumerBill.getBillIdentify(), giveBalance, changeGiveBalance, BalanceType.GIVE_BALANCE, consumerBill.getPlatform());
+            List<ConsumerBillChangeDetail> consumerBillChangeDetails = new ArrayList<>(2);
+            consumerBillChangeDetails.add(balanceBillDetail);
+            consumerBillChangeDetails.add(giveBalanceBillDetail);
+            updateConsumerBalance(unionAccount, BalanceType.REAL_BALANCE, balanceBillDetail.getPreChangeValue());
+            updateConsumerBalance(unionAccount, BalanceType.GIVE_BALANCE, giveBalanceBillDetail.getPreChangeValue());
+            return consumerBillChangeDetails;
+        }
+        return null;
+    }
+
     //余额流水,金额变动
     public Boolean isBalanceChange(ConsumerBill consumerBill) {
         BillType billType = consumerBill.getBillType();
@@ -285,6 +307,17 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
         detail.setChangeValue(changeValue);
         detail.setBalanceType(balanceType);
         detail.setAfterChangeValue(NumberUtil.addIfNull(afterChangeValue, changeValue));
+        detail.setPlatform(platform);
+        return detail;
+    }
+
+    public ConsumerBillChangeDetail fillInfoFailChangeDetail(String billIdentify, Integer afterChangeValue, Integer changeValue, BalanceType balanceType, Platform platform) {
+        ConsumerBillChangeDetail detail = new ConsumerBillChangeDetail();
+        detail.setBillIdentify(billIdentify);
+        detail.setPreChangeValue(afterChangeValue - NumberUtil.getIfNull(changeValue));
+        detail.setChangeValue(changeValue);
+        detail.setBalanceType(balanceType);
+        detail.setAfterChangeValue(afterChangeValue);
         detail.setPlatform(platform);
         return detail;
     }
@@ -668,7 +701,7 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
     @Override
     @DataSource(name = DataSourcesType.USERPLATFORM)
     public ConsumerBill findAllByUnionAccount(String unionAccount) {
-        return consumerBillRepository.findAllByUnionAccount(unionAccount);
+        return consumerBillRepository.findAllByUnionAccountSql(unionAccount);
     }
 
     @Override
@@ -760,6 +793,81 @@ public class ConsumerBillServiceImpl implements ConsumerBillService {
                     }
                     consumerBillChangeDetailRepository.save(consumerBillChangeDetail);
                 }
+            }
+        }
+    }
+
+    @Override
+    @DataSource(name = DataSourcesType.USERPLATFORM)
+    public void fixOldUtUserTotalFlow(String phone) {
+        UtConsumer cbjConsumer = cbjUtConsumerService.getUtConsumerByPhone(phone);
+        UtConsumer chjConsumer = chjUtConsumerService.getUtConsumerByPhone(phone);
+        Consumer consumer = consumerService.findByPhone(phone);
+        if (consumer == null) {
+            log.error("查找不到用户,手机号：{}", phone);
+            throw new InvalidParameterException("查找不到用户！");
+        }
+        List<UtUserTotalFlow> allFlows = new ArrayList<>(12);
+        if (cbjConsumer != null) {
+            List<UtUserTotalFlow> cbjFlows = utUserTotalFlowService.cbjFindAllByUid(cbjConsumer.getId());
+            if (CollectUtil.collectionNotEmpty(cbjFlows)) {
+                cbjFlows.forEach(item -> item.setPlatform(Platform.CHEBIANJIE));
+                allFlows.addAll(cbjFlows);
+            }
+        }
+        if (chjConsumer != null) {
+            List<UtUserTotalFlow> chjFlows = utUserTotalFlowService.chjFindAllByUid(chjConsumer.getId());
+            if (CollectUtil.collectionNotEmpty(chjFlows)) {
+                chjFlows.forEach(item -> item.setPlatform(Platform.CHEHUIJIE));
+                allFlows.addAll(chjFlows);
+            }
+        }
+        if (CollectUtil.collectionNotEmpty(allFlows)) {
+            //部分时间从秒转毫秒
+            allFlows.forEach(item -> {
+                if (isSencond(item.getCreateTime())) {
+                    item.setCreateTime(item.getCreateTime() * 1000);
+                }
+            });
+            allFlows.sort(Comparator.comparing(UtUserTotalFlow::getCreateTime).reversed());
+        }
+        List<ConsumerBill> consumerBills = consumerBillRepository.findAllByUnionAccount(consumer.getUnionAccount());
+        if (CollectUtil.collectionNotEmpty(consumerBills)) {
+            List<ConsumerBill> filterConsumerBills = consumerBills.stream().filter(consumerBill -> {
+                if (Objects.equals(consumerBill.getBillType(), BillType.CHARGE)) {
+                    if (Objects.equals(consumerBill.getOrderStatus(), OrderStatus.CHARGE_READY)) {
+                        return false;
+                    }
+                }
+                return true;
+            }).sorted(Comparator.comparing(ConsumerBill::getCreateTime)).collect(Collectors.toList());
+            List<ConsumerBalance> consumerBalances = consumerBalanceService.findByUnionAccount(consumer.getUnionAccount());
+            Map<BalanceType, ConsumerBalance> balanceMap = consumerBalances.stream().collect(Collectors.toMap(ConsumerBalance::getBalanceType, Function.identity()));
+            Integer balance = NumberUtil.getIfNull(balanceMap.get(BalanceType.REAL_BALANCE).getValue());
+            Integer giveBalcne = NumberUtil.getIfNull(balanceMap.get(BalanceType.GIVE_BALANCE).getValue());
+            //已经存在流水
+            if (CollectUtil.collectionNotEmpty(filterConsumerBills)) {
+                //第一笔
+                ConsumerBill consumerBill = filterConsumerBills.get(0);
+                List<ConsumerBillChangeDetail> consumerBillChangeDetails = consumerBillChangeDetailRepository.findAllByBillIdentify(consumerBill.getBillIdentify());
+                Map<BalanceType, ConsumerBillChangeDetail> detailMap = consumerBillChangeDetails.stream().collect(Collectors.toMap(ConsumerBillChangeDetail::getBalanceType, Function.identity()));
+                ConsumerBillChangeDetail balanceDetail = detailMap.get(BalanceType.REAL_BALANCE);
+                ConsumerBillChangeDetail giveBalcneDetail = detailMap.get(BalanceType.GIVE_BALANCE);
+                balance = NumberUtil.getIfNull(balanceDetail.getAfterChangeValue());
+                giveBalcne = NumberUtil.getIfNull(giveBalcneDetail.getAfterChangeValue());
+            }
+            updateConsumerBalance(consumer.getUnionAccount(), BalanceType.REAL_BALANCE, balance);
+            updateConsumerBalance(consumer.getUnionAccount(), BalanceType.GIVE_BALANCE, giveBalcne);
+            for (UtUserTotalFlow currentFlow : allFlows) {
+                if (currentFlow.getAgentId() != null) {
+                    //log.info("大客户流水,跳过flow：{}", currentFlow);
+                    continue;
+                }
+                //清洗流水
+                ConsumerBill consumerBill = fillInfoConsumerBill(currentFlow, consumer);
+                List<ConsumerBillChangeDetail> consumerBillChangeDetailTemps = handleFailBillDetail(consumerBill, currentFlow);
+                consumerBillRepository.save(consumerBill);
+                consumerBillChangeDetailRepository.saveAll(consumerBillChangeDetailTemps);
             }
         }
     }

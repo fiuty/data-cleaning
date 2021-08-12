@@ -19,7 +19,10 @@ public interface ConsumerBillRepository extends JpaRepository<ConsumerBill, Long
     List<ConsumerBill> findAllByUnionAccountIn(List<String> unionAccount);
 
     @Query(nativeQuery = true, value = "select * from consumer_bill where union_account = :unionAccount order by create_time desc limit 0,1")
-    ConsumerBill findAllByUnionAccount(@Param("unionAccount") String unionAccount);
+    ConsumerBill findAllByUnionAccountSql(@Param("unionAccount") String unionAccount);
 
     List<ConsumerBill> findAllByUnionAccountAndCreateTimeGreaterThanOrderByCreateTimeDesc(String consumerAccount, LocalDateTime time);
+
+    List<ConsumerBill> findAllByUnionAccount(String unionAccount);
+
 }
